@@ -1,0 +1,463 @@
+<title>Patterns</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400&family=Nunito+Sans:wght@400;500;700&display=swap">
+<style>
+  /* Layout: two fixed-palette phone screens from the Patterns theme spec, shown
+     side by side on a quiet studio backdrop; they wrap to a stacked column on
+     narrow viewports. The studio backdrop follows the viewer's own theme; the
+     phone screens themselves do not, by the product's own day/night design. */
+  :root {
+    --studio-bg: #ECE7E1;
+    --studio-card: #FFFFFF;
+    --studio-fg: #2B2724;
+    --studio-muted: #6E655F;
+    --studio-border: #DBD3C9;
+
+    /* Patterns product palette, fixed per docs/design/themes.md */
+    --night: #1A1618;
+    --cocoa: #2A2326;
+    --mauve: #7A4A5A;
+    --rose: #E6B8C4;
+    --amber: #F0A35E;
+    --cream: #F5EDE6;
+    --blush: #F3ECEE;
+    --dim: #D9CDD2;
+    --placeholder: #9A8D92;
+    --cream-border: #E6D9D2;
+    --bar2: #C48B9F;
+    --white: #FFFFFF;
+
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --studio-bg: #18161A;
+      --studio-card: #221F22;
+      --studio-fg: #EDE7E2;
+      --studio-muted: #A89E98;
+      --studio-border: #332E31;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --studio-bg: #18161A;
+    --studio-card: #221F22;
+    --studio-fg: #EDE7E2;
+    --studio-muted: #A89E98;
+    --studio-border: #332E31;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--studio-bg);
+    color: var(--studio-fg);
+    font-family: var(--font-body);
+    padding-inline: 20px;
+  }
+  .stage {
+    max-width: 840px;
+    margin: 0 auto;
+    padding-block: 48px;
+  }
+  .intro {
+    max-width: 48ch;
+    margin-bottom: 40px;
+  }
+  .intro h1 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 2rem;
+    margin: 0 0 10px;
+    text-wrap: balance;
+  }
+  .intro p {
+    margin: 0;
+    color: var(--studio-muted);
+    line-height: 1.6;
+    font-size: 0.95rem;
+  }
+
+  .phones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px;
+    align-items: flex-start;
+  }
+  .phone-wrap {
+    width: min(360px, 100%);
+  }
+  .phone-label {
+    font-size: 0.8rem;
+    color: var(--studio-muted);
+    margin: 0 0 10px 2px;
+  }
+
+  .device {
+    background: #1F1D1F;
+    border-radius: 34px;
+    padding: 10px;
+    box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.45);
+  }
+  .screen {
+    border-radius: 24px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .screen.dark { background: var(--night); }
+  .screen.cream { background: var(--cream); }
+
+  /* --- night sky header --- */
+  .sky { position: relative; height: 120px; }
+  .sky svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .sky-text {
+    position: relative;
+    z-index: 1;
+    padding: 16px 18px 0;
+  }
+  .sky-text .date {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--dim);
+  }
+  .sky-text h2 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.6rem;
+    color: var(--blush);
+    margin: 2px 0 0;
+  }
+
+  /* --- shared content column --- */
+  .content { padding: 18px; display: flex; flex-direction: column; gap: 20px; }
+
+  /* --- score rings --- */
+  .rings-card {
+    background: var(--cocoa);
+    border-radius: 4px;
+    padding: 14px 10px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .ring { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; }
+  .ring svg { width: 64px; height: 64px; }
+  .ring .track { fill: none; stroke: var(--mauve); stroke-opacity: 0.35; stroke-width: 6; }
+  .ring .fill { fill: none; stroke: var(--rose); stroke-width: 6; stroke-linecap: round; }
+  .ring-number-wrap { position: relative; width: 64px; height: 64px; }
+  .ring-number {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500; font-size: 1.1rem; color: var(--blush);
+  }
+  .ring-label { font-size: 0.75rem; color: var(--blush); }
+  .rings-note { font-size: 0.72rem; color: var(--placeholder); margin: -8px 0 0; }
+
+  /* --- conversation --- */
+  .q, .f, .a {
+    margin: 0;
+    max-width: 38ch;
+  }
+  .q {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    line-height: 1.55;
+    color: var(--blush);
+  }
+  .f {
+    font-family: var(--font-display);
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    color: var(--dim);
+  }
+  .a {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--blush);
+  }
+
+  /* --- tags --- */
+  .tags-label { font-size: 0.75rem; color: var(--placeholder); margin: 0; }
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .tag {
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--blush);
+    background: var(--mauve);
+    border: none;
+    border-radius: 999px;
+    padding: 6px 12px;
+  }
+  .tag.editable { cursor: pointer; }
+
+  /* --- input row (dark) --- */
+  .input-row { display: flex; gap: 8px; margin-top: auto; padding-top: 6px; }
+  .field {
+    flex: 1;
+    min-width: 0;
+    height: 44px;
+    background: var(--cocoa);
+    border: 1px solid #3A3134;
+    border-radius: 4px;
+    color: var(--blush);
+    font-size: 1rem;
+    font-family: var(--font-body);
+    padding: 0 14px;
+  }
+  .field::placeholder { color: var(--placeholder); }
+  .send {
+    height: 44px;
+    padding: 0 18px;
+    background: var(--mauve);
+    color: var(--blush);
+    border: none;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 0.9375rem;
+    font-family: var(--font-body);
+  }
+
+  /* --- cream screen --- */
+  .screen.cream .content { color: var(--cocoa); }
+  .eyebrow { font-size: 0.75rem; color: var(--mauve); margin: 0; }
+  .title {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.5rem;
+    margin: 2px 0 0;
+    color: var(--cocoa);
+  }
+  .summary {
+    font-family: var(--font-display);
+    font-size: 1.0625rem;
+    line-height: 1.55;
+    margin: 0;
+    color: var(--cocoa);
+  }
+
+  .data-card {
+    background: var(--white);
+    border: 1px solid var(--cream-border);
+    border-radius: 4px;
+    padding: 14px;
+  }
+  .card-title { font-size: 0.8125rem; font-weight: 500; margin: 0 0 12px; color: var(--cocoa); }
+  .bars { display: flex; align-items: flex-end; gap: 28px; height: 110px; padding: 0 6px; }
+  .bar-group { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; flex: 1; }
+  .bar {
+    width: 36px;
+    border-radius: 2px 2px 0 0;
+  }
+  .bar-value {
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    font-size: 0.8125rem;
+    margin-top: 8px;
+  }
+  .bar-label { font-size: 0.75rem; color: var(--cocoa); margin-top: 2px; text-align: center; }
+  .bar-n { font-size: 0.6875rem; color: #8A7F78; margin-top: 1px; }
+
+  .caution {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .caution .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+  .caution p { margin: 0; font-size: 0.8125rem; line-height: 1.5; color: var(--cocoa); }
+
+  .edit-tags .tags .tag {
+    background: var(--cream-border);
+    color: var(--cocoa);
+  }
+
+  .done {
+    height: 44px;
+    border: none;
+    border-radius: 4px;
+    background: var(--mauve);
+    color: var(--blush);
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 0.9375rem;
+  }
+
+  button { cursor: pointer; }
+  button:focus-visible, .field:focus-visible, .field:focus {
+    outline: 2px solid var(--rose);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 420px) {
+    .stage { padding-block: 32px; }
+  }
+</style>
+
+<main class="stage">
+  <div class="intro">
+    <h1>Patterns</h1>
+    <p>A prototype of the nightly check-in and the insights review, built from the Patterns theme spec.</p>
+  </div>
+
+  <div class="phones">
+    <figure class="phone-wrap" style="margin:0;">
+      <figcaption class="phone-label">Tonight</figcaption>
+      <div class="device">
+        <div class="screen dark">
+          <div class="sky">
+            <svg viewBox="0 0 360 120" preserveAspectRatio="none" aria-hidden="true">
+              <rect x="0" y="0" width="360" height="24" fill="#1A1618"></rect>
+              <rect x="0" y="24" width="360" height="24" fill="#211c1f"></rect>
+              <rect x="0" y="48" width="360" height="24" fill="#2A2326"></rect>
+              <rect x="0" y="72" width="360" height="24" fill="#4a2f3b"></rect>
+              <rect x="0" y="96" width="360" height="24" fill="#7A4A5A"></rect>
+              <circle cx="60" cy="16" r="1.3" fill="#F3ECEE" opacity="0.8"></circle>
+              <circle cx="110" cy="30" r="1" fill="#F3ECEE" opacity="0.6"></circle>
+              <circle cx="200" cy="12" r="1.2" fill="#F3ECEE" opacity="0.7"></circle>
+              <circle cx="255" cy="36" r="1" fill="#F3ECEE" opacity="0.5"></circle>
+              <circle cx="330" cy="20" r="1.3" fill="#F3ECEE" opacity="0.8"></circle>
+              <circle cx="300" cy="24" r="10" fill="#E6B8C4"></circle>
+              <circle cx="304.5" cy="20.5" r="9" fill="#1A1618"></circle>
+              <polygon points="0,120 0,95 60,80 140,100 220,78 300,96 360,85 360,120" fill="#140F12"></polygon>
+              <polygon points="0,120 0,108 90,92 180,112 270,90 360,104 360,120" fill="#0F0B0D"></polygon>
+            </svg>
+            <div class="sky-text">
+              <span class="date">Thursday, Oct 1</span>
+              <h2>Tonight</h2>
+            </div>
+          </div>
+
+          <div class="content">
+            <div class="rings-card">
+              <div class="ring">
+                <div class="ring-number-wrap">
+                  <svg viewBox="0 0 64 64">
+                    <circle class="track" cx="32" cy="32" r="28" stroke-dasharray="175.93" stroke-dashoffset="0"></circle>
+                    <circle class="fill" cx="32" cy="32" r="28" stroke-dasharray="175.93" stroke-dashoffset="49.26" transform="rotate(-90 32 32)"></circle>
+                  </svg>
+                  <span class="ring-number">72</span>
+                </div>
+                <span class="ring-label">Readiness</span>
+              </div>
+              <div class="ring">
+                <div class="ring-number-wrap">
+                  <svg viewBox="0 0 64 64">
+                    <circle class="track" cx="32" cy="32" r="28" stroke-dasharray="175.93" stroke-dashoffset="0"></circle>
+                    <circle class="fill" cx="32" cy="32" r="28" stroke-dasharray="175.93" stroke-dashoffset="33.43" transform="rotate(-90 32 32)"></circle>
+                  </svg>
+                  <span class="ring-number">81</span>
+                </div>
+                <span class="ring-label">Sleep</span>
+              </div>
+              <div class="ring">
+                <div class="ring-number-wrap">
+                  <svg viewBox="0 0 64 64">
+                    <circle class="track" cx="32" cy="32" r="28" stroke-dasharray="175.93" stroke-dashoffset="0"></circle>
+                    <circle class="fill" cx="32" cy="32" r="28" stroke-dasharray="175.93" stroke-dashoffset="91.48" transform="rotate(-90 32 32)"></circle>
+                  </svg>
+                  <span class="ring-number">54</span>
+                </div>
+                <span class="ring-label">HRV (ms)</span>
+              </div>
+            </div>
+            <p class="rings-note">HRV is shown against your last 30 days: 41 to 68 ms.</p>
+
+            <p class="q">Your readiness was low this morning. How did your energy feel this afternoon?</p>
+            <p class="a">Pretty flat until I had coffee around three, then wired until late.</p>
+            <p class="f">Sounds like that coffee carried into the evening. What time did you stop looking at screens?</p>
+            <p class="a">Closed the laptop around eleven.</p>
+
+            <div>
+              <p class="tags-label">Tags found tonight</p>
+              <div class="tags">
+                <span class="tag">late caffeine</span>
+                <span class="tag">late screens</span>
+                <span class="tag">low afternoon energy</span>
+              </div>
+            </div>
+
+            <div class="input-row">
+              <input class="field" placeholder="Type your answer" aria-label="Your answer">
+              <button class="send" type="button">Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <figure class="phone-wrap" style="margin:0;">
+      <figcaption class="phone-label">Insights</figcaption>
+      <div class="device">
+        <div class="screen cream">
+          <div class="content">
+            <div>
+              <p class="eyebrow">Last 12 nights</p>
+              <h2 class="title">Insights</h2>
+            </div>
+
+            <p class="summary">On nights after late caffeine, your HRV tended to run lower.</p>
+
+            <div class="data-card">
+              <p class="card-title">Average HRV</p>
+              <div class="bars">
+                <div class="bar-group">
+                  <div class="bar" style="height: 86.6px; background: var(--mauve);"></div>
+                  <span class="bar-value">48 ms</span>
+                  <span class="bar-label">Late caffeine</span>
+                  <span class="bar-n">9 nights</span>
+                </div>
+                <div class="bar-group">
+                  <div class="bar" style="height: 110px; background: var(--bar2);"></div>
+                  <span class="bar-value">61 ms</span>
+                  <span class="bar-label">No late caffeine</span>
+                  <span class="bar-n">14 nights</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="data-card">
+              <p class="card-title">Readiness the next morning</p>
+              <div class="bars">
+                <div class="bar-group">
+                  <div class="bar" style="height: 94.7px; background: var(--mauve);"></div>
+                  <span class="bar-value">68</span>
+                  <span class="bar-label">Evening workout</span>
+                  <span class="bar-n">7 nights</span>
+                </div>
+                <div class="bar-group">
+                  <div class="bar" style="height: 110px; background: var(--bar2);"></div>
+                  <span class="bar-value">79</span>
+                  <span class="bar-label">Morning or no workout</span>
+                  <span class="bar-n">16 nights</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="caution">
+              <span class="dot" aria-hidden="true"></span>
+              <p>Pattern, not proof. Based on 9 nights of 23 logged.</p>
+            </div>
+
+            <div class="edit-tags">
+              <p class="card-title">Recent tags</p>
+              <div class="tags">
+                <button class="tag editable" type="button" onclick="this.remove()">late caffeine &times;</button>
+                <button class="tag editable" type="button" onclick="this.remove()">evening workout &times;</button>
+                <button class="tag editable" type="button" onclick="this.remove()">short sleep &times;</button>
+              </div>
+            </div>
+
+            <button class="done" type="button">Done</button>
+          </div>
+        </div>
+      </div>
+    </figure>
+  </div>
+</main>
