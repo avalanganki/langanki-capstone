@@ -86,7 +86,9 @@ Phone first. Design for a 360px wide screen.
 **Shapes**
 - Cards, inputs, and buttons are rectangular with 4px corners. This keeps the app from looking like a chat product.
 - Tags are pills. They are the one soft shape and are meant to feel like labels, not buttons.
-- Scores (readiness, sleep, average HRV) are circular rings, with the number inside and the label below. Ring track is Dusty Mauve at reduced opacity, ring fill is Rose Glow.
+- Readiness and sleep scores are circular rings, with the number inside and the label below. Ring track is Dusty Mauve at reduced opacity, ring fill is Rose Glow.
+- Average HRV is shown as the number and label only, with no ring, on the same card background. HRV has no natural maximum, so a ring would suggest a scale that doesn't exist.
+- The user's answers sit in a Cocoa Card with 4px corners, so they read apart from Claude's questions.
 
 **Input**
 - Pinned at the bottom above the keyboard so the question stays visible while typing.
@@ -176,7 +178,7 @@ Don't:
 
 ## Open Questions
 
-1. **HRV ring.** Readiness and sleep are scored 0 to 100, so a full ring means something. HRV has no natural maximum. Should a full ring be a fixed number or the user's personal baseline?
+1. **HRV ring.** Resolved Oct 1 (`docs/notes.md`): no ring for HRV, just the number. Readiness and sleep are scored 0 to 100, so a full ring means something, but HRV has no natural maximum.
 2. **Oura developer terms.** Skim the terms agreed to when registering the app at cloud.ouraring.com, since Patterns connects to their API.
 3. **Fonts at small sizes.** Test Fraunces on a real phone in a dark room before committing.
 4. **Platform.** Streamlit gives less control over fonts, bottom-pinned input, and phone spacing than a simple custom web page. Browser versus installed home-screen app also changes how much of this layout is controllable.

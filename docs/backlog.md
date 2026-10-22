@@ -12,7 +12,7 @@ Status: done, issue #1 (see `docs/xchangelog.md`)
 ### US01 Prototype: apply Oct 1 review notes
 As Ava, I want the prototype to reflect my Oct 1 review notes (`docs/notes.md`), so later UI work builds on the right design.
 
-Status: in progress, issue #2 (see `docs/todo.md`)
+Status: done, issue #2 (see `docs/xchangelog.md`)
 
 ## Unscheduled
 
