@@ -35,7 +35,7 @@ Rendered with Streamlit's `AppTest`. Exceptions: none. Title: `Patterns`.
 
 4 rows, all four fields present on every row, none missing. Caption under the table: "Based on 4 nights."
 
-Browser click-through by Ava: [ ] pending
+Browser click-through by Ava: app served at localhost:8501. Ava approved the merge on 2026-10-22. A separate click-through confirmation was not recorded.
 
 ## Check 3 (AC3): one file, marked TODO
 
