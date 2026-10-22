@@ -7,4 +7,4 @@ Grouped by user story. New issues and bugs start here. Items move to `docs/todo.
 ### US00 Foundations: running skeleton
 As the developer, I want a Streamlit app that starts cleanly and shows sample nights, so every later story has something working to build on.
 
-Status: in progress, issue #1 (see `docs/todo.md`)
+Status: done, issue #1 (see `docs/xchangelog.md`)
