@@ -151,6 +151,7 @@
     font-variant-numeric: tabular-nums;
     font-weight: 500; font-size: 1.1rem; color: var(--blush);
   }
+  .ring-number.plain { font-size: 1.4rem; }
   .ring-label { font-size: 0.75rem; color: var(--blush); }
   .rings-note { font-size: 0.72rem; color: var(--placeholder); margin: -8px 0 0; }
 
@@ -171,11 +172,15 @@
     line-height: 1.6;
     color: var(--dim);
   }
+  /* Answers sit in a Cocoa Card so they read apart from Claude's questions. */
   .a {
     font-family: var(--font-body);
     font-size: 1rem;
     line-height: 1.6;
     color: var(--blush);
+    background: var(--cocoa);
+    border-radius: 4px;
+    padding: 12px 14px;
   }
 
   /* --- tags --- */
@@ -358,27 +363,23 @@
               </div>
               <div class="ring">
                 <div class="ring-number-wrap">
-                  <svg viewBox="0 0 64 64">
-                    <circle class="track" cx="32" cy="32" r="28" stroke-dasharray="175.93" stroke-dashoffset="0"></circle>
-                    <circle class="fill" cx="32" cy="32" r="28" stroke-dasharray="175.93" stroke-dashoffset="91.48" transform="rotate(-90 32 32)"></circle>
-                  </svg>
-                  <span class="ring-number">54</span>
+                  <span class="ring-number plain">54</span>
                 </div>
                 <span class="ring-label">HRV (ms)</span>
               </div>
             </div>
-            <p class="rings-note">HRV is shown against your last 30 days: 41 to 68 ms.</p>
+            <p class="rings-note">Your HRV over the last 30 days: 41 to 68 ms.</p>
 
             <p class="q">Your readiness was low this morning. How did your energy feel this afternoon?</p>
             <p class="a">Pretty flat until I had coffee around three, then wired until late.</p>
-            <p class="f">Sounds like that coffee carried into the evening. What time did you stop looking at screens?</p>
-            <p class="a">Closed the laptop around eleven.</p>
+            <p class="f">How settled did you feel by bedtime?</p>
+            <p class="a">Still a bit buzzy. It took a while to wind down.</p>
 
             <div>
               <p class="tags-label">Tags found tonight</p>
               <div class="tags">
                 <span class="tag">late caffeine</span>
-                <span class="tag">late screens</span>
+                <span class="tag">slow wind-down</span>
                 <span class="tag">low afternoon energy</span>
               </div>
             </div>
