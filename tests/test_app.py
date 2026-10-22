@@ -2,7 +2,8 @@ from streamlit.testing.v1 import AppTest
 
 
 def test_app_shows_title_and_sample_nights():
-    at = AppTest.from_file("app.py").run()
+    # Default 3s timeout is too short for the first cold import of pandas.
+    at = AppTest.from_file("app.py").run(timeout=30)
     assert not at.exception
     assert at.title[0].value == "Patterns"
     table = at.dataframe[0].value
