@@ -1,0 +1,6 @@
+[
+  {"date": "2026-01-05", "sleep_score": 82, "readiness": 78, "avg_hrv": 54},
+  {"date": "2026-01-06", "sleep_score": 71, "readiness": 66, "avg_hrv": 41},
+  {"date": "2026-01-07", "sleep_score": 88, "readiness": 85, "avg_hrv": 62},
+  {"date": "2026-01-08", "sleep_score": 75, "readiness": 72, "avg_hrv": 48}
+]
