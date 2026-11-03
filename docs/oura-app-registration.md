@@ -10,7 +10,7 @@ Where: https://developer.ouraring.com/applications (sign in, then create a new a
 | Privacy policy URL | https://github.com/avalanganki/langanki-capstone/blob/main/docs/legal/privacy-policy.md |
 | Terms of service URL | https://github.com/avalanganki/langanki-capstone/blob/main/docs/legal/terms-of-service.md |
 | Redirect URI | `http://localhost:8501/callback/` (trailing slash included; it must match exactly) |
-| Scopes | `daily` only. Do not tick `email`, `personal`, `heartrate`, `workout`, `session`, `spo2`, or `tag`. |
+| Scopes | Tick **Daily** only. The form ticks most boxes by default (seen 2026-11-03): untick Email, Personal, Heartrate, Tag, Workout, Session, SpO2, Stress, Heart Health, and Ring Configuration. |
 | Logo (if asked) | Any original image. It must not use Oura's name or logo (API agreement Sec. 4(f)). |
 | API agreement | Read and accept the Oura API and MCP Agreement (effective June 8, 2026): https://cloud.ouraring.com/legal/api-agreement |
 
