@@ -21,10 +21,10 @@ As Ava, I want to save each night's answers as a dated entry with tags, look bac
 
 Decisions: entries live in a Supabase `entries` table. Tags are typed by Ava (comma-separated) until Claude extraction (FR-4) is built. The night's questions are 3 fixed, neutral questions until Claude question generation (FR-2) is built. One entry per date.
 
-- Create: answer the night's questions and submit; the app saves a dated entry with the free text and its tags. Issue #3, see `docs/todo.md`.
-- Read: see a list of past entries by date, and open one to see the answers and tags. Issue #4, see `docs/todo.md`.
-- Update: fix a wrong tag or edit an answer on a saved entry. Issue #5, see `docs/todo.md`.
-- Delete: remove one entry made by mistake. Issue #6, see `docs/todo.md`.
+- Create: answer the night's questions and submit; the app saves a dated entry with the free text and its tags. Issue #3, done, see `docs/xchangelog.md`.
+- Read: see a list of past entries by date, and open one to see the answers and tags. Issue #4, done, see `docs/xchangelog.md`.
+- Update: fix a wrong tag or edit an answer on a saved entry. Issue #5, done, see `docs/xchangelog.md`.
+- Delete: remove one entry made by mistake. Issue #6, done, see `docs/xchangelog.md`.
 
 ## Unscheduled
 
