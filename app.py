@@ -3,7 +3,14 @@ import datetime
 import streamlit as st
 
 import db
-from entries import QUESTIONS, DuplicateEntryError, create_entry, parse_tags
+from entries import (
+    QUESTIONS,
+    DuplicateEntryError,
+    create_entry,
+    get_entry,
+    list_entries,
+    parse_tags,
+)
 from sample_data import load_nights
 
 st.title("Patterns")
@@ -43,5 +50,26 @@ with tonight:
     )
     st.caption(f"Based on {len(nights)} nights.")
 
+def format_date(iso):
+    d = datetime.date.fromisoformat(iso)
+    return f"{d:%a, %b} {d.day}, {d.year}"
+
+
 with past:
-    st.info("Coming soon")
+    client = db.get_client()
+    saved = list_entries(client)
+    if not saved:
+        st.info("No entries yet. Save one from Tonight.")
+    else:
+        dates = {e["id"]: e["entry_date"] for e in saved}
+        chosen = st.selectbox("Entry", list(dates), format_func=lambda i: format_date(dates[i]))
+        st.caption(f"{len(saved)} {'entry' if len(saved) == 1 else 'entries'}.")
+        entry = get_entry(client, chosen)
+        if entry is None:
+            st.warning("That entry no longer exists.")
+        else:
+            for item in entry["answers"]:
+                st.write(item["question"])
+                with st.container(border=True):
+                    st.write(item["answer"].strip() or "No answer")
+            st.write("Tags: " + (", ".join(entry["tags"]) or "No tags"))

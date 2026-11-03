@@ -55,3 +55,33 @@ tests/test_sample_data.py::test_missing_field_raises PASSED
 ### Check 6: privacy
 
 `git grep -nE "sb_secret_|sb_publishable_|eyJ...|supabase\.co"` over tracked files returns nothing. `.env` is gitignored. The app prints no answers, tags, or keys; the server log above shows only startup lines.
+
+## Read (issue #4)
+
+Runs on 2026-11-03.
+
+### Check 1 (AC1): empty state
+
+Covered by `test_past_entries_empty_state` (fake client with no rows shows "No entries yet. Save one from Tonight.").
+
+Decided: the real table already has rows, so the AppTest above is the evidence for the empty state rather than deleting data.
+
+### Check 2 (AC2): newest first with count
+
+Covered by `test_past_entries_listed_newest_first_with_count` (entries saved out of order list as "Wed, Jan 5, 2000", then "Sat, Jan 1, 2000"; caption "2 entries."). Against the real table, `list_entries` returned 6 rows in descending `entry_date` order (count and order only; no entry content printed).
+
+Decided: one entry reads "1 entry." rather than "1 entries." (`test_single_entry_count_is_singular`).
+
+2026-11-03: Ava checked in the running app that synthetic entries saved out of order list newest first with the right count.
+
+### Check 3 (AC3): open an entry
+
+Covered by `test_selecting_entry_shows_answers_and_tags`: every question shown, each answer in a bordered card, blank answers as "No answer", tags as "Tags: late caffeine, stress" or "Tags: No tags". `get_entry` against the real table found an existing id and returned `None` for a missing one.
+
+2026-11-03: Ava opened an entry in the running app and it matched its row in Supabase.
+
+### Check 4 (AC4): tests pass without real Supabase
+
+`pytest`: 23 passed. App tests patch `db.get_client` with an in-memory fake; `list_entries`/`get_entry` tests use a `MagicMock` client.
+
+`streamlit run app.py --server.headless true` starts, `/_stcore/health` returns `ok`, and the server log has no errors.
