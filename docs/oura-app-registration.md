@@ -30,3 +30,15 @@ Before submitting:
 - **Access limits.** Personal access tokens were retired in December 2025, so OAuth is the only way in. A third-party source says apps are limited to 10 users before Oura approval (fine for one user). Gen3 and newer rings need an active Oura membership for API access.
 
 Sources: [Oura API and MCP Agreement](https://cloud.ouraring.com/legal/api-agreement), [Oura authentication docs](https://cloud.ouraring.com/docs/authentication), [Terra: Oura API for AI apps](https://tryterra.co/blog/oura-api-ai-apps-access-permissions-commercial-restrictions), [Oura support: The Oura API](https://support.ouraring.com/hc/en-us/articles/4415266939155-The-Oura-API)
+
+## Option considered: Oura's MCP Server (researched 2026-11-03)
+
+Sec. 4(d) of the agreement allows LLM use of Oura data only "solely through the MCP Server." We looked at whether Patterns could use that route. We decided against it for now:
+
+- **No public Oura MCP server found.** The agreement defines the MCP Server as infrastructure "operated by the Company" (Oura), but no Oura docs or connection URL turned up. Every Oura MCP server found online is third-party. Those call the regular Oura API, so they don't count as Oura's MCP Server.
+- **No storing.** Sec. 3(m): "you shall not store or cache any data accessed or obtained through the MCP Server" without separate written authorization from Oura. Patterns has to keep weeks of nightly scores to link entries to the next night and count nights per pattern, so MCP-only access can't support the core feature.
+- **Supply-chain risk.** In February 2026 a trojanized copy of a community Oura MCP server carrying the StealC infostealer was planted in public MCP registries.
+
+Decision: use the regular Oura API with the `daily` scope. Claude sees only journal answer text. App code links tags to Oura scores and writes any pattern sentences from templates, because a sentence like "sleep score averaged 6 lower on late-caffeine nights" is derived from Oura data. If an AI summary of the patterns is wanted later, ask Oura's developer support in writing for MCP access plus authorization to store data.
+
+Sources: [Oura API and MCP Agreement](https://cloud.ouraring.com/legal/api-agreement), [Straiker: SmartLoader clones Oura Ring MCP](https://www.straiker.ai/blog/smartloader-clones-oura-ring-mcp-to-deploy-supply-chain-attack), [SC World: fake Oura server malware campaign](https://www.scworld.com/brief/hackers-use-fake-oura-server-for-stealc-malware-campaign), [athletedata.health Oura MCP guide (third-party, paid)](https://www.athletedata.health/guides/oura-mcp-server), [mitchhankins01/oura-ring-mcp (community)](https://github.com/mitchhankins01/oura-ring-mcp)
