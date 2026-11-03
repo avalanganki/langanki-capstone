@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 ## What this is
-Patterns: a nightly reflection app for Oura ring users. Claude asks short, contextual questions about the day, turns the answers into tags, and links them to the next night's Oura scores. The goal is to point to specific lifestyle factors (caffeine, late workouts, stress) that may be affecting sleep, HRV, and readiness, in plain language instead of the Oura app's medical jargon.
+Patterns: a nightly reflection app for Oura ring users. The app asks short, contextual questions about the day, Claude turns the written answers into tags, and app code links them to the next night's Oura scores. The goal is to point to specific lifestyle factors (caffeine, late workouts, stress) that may be affecting sleep, HRV, and readiness, in plain language instead of the Oura app's medical jargon.
 
 ## Who uses it
 - Ava, a self-described biohacker, is the only user this semester (single user, Oura API v2 via OAuth2).
@@ -18,11 +18,11 @@ Python, Streamlit, Supabase (database and login), Oura API v2, Claude API. Deplo
 - Question tone is brief and neutral, never judgmental.
 
 ## Privacy rules (never break)
-- Send Claude only daily summary values (sleep score, readiness, average HRV). No raw heart rate series, name, email, or account IDs.
+- Never send Oura data, or anything derived from it (scores, correlations, trend sentences), to Claude or any AI model. Oura's API agreement Sec. 4(d) forbids it. Claude sees only journal answer text, with no name, email, or account IDs.
 - Never log journal text or health values. Logs hold errors and timestamps only.
 - Secrets live in `.env` (gitignored). Oura tokens are never logged or committed.
 - No real Oura data or journal entries in the repo, demos, or screenshots. Use the synthetic dataset.
-- Oura scopes: `daily`, `heartrate`, and possibly `tag`. Never `email` or `personal`.
+- Oura scopes: `daily` only (add the smallest extra scope only if average HRV needs it). Never `email` or `personal`.
 
 ## Instructions for Claude
 
