@@ -45,3 +45,9 @@ Found testing US02 Update. Ava can add tags that aren't in her answers, which is
 
 ### Delete a range of entries (e.g. a week)
 Found testing US02 Delete. #6 deletes one entry at a time; there is no bulk delete. FR-11 asks for single-entry and delete-all only. If a range delete is wanted, it needs its own confirm step. Trends and correlations must be computed from whatever entries remain and the "based on N nights" count must drop to match; deleted nights show as gaps, never filled in.
+
+### Decision: keep Oura data away from Claude
+Found researching Oura app registration (2026-11-03). The Oura API and MCP Agreement (effective June 8, 2026), Sec. 4(d), forbids using the Oura API to "prompt, or otherwise provide input or data to any AI Model." LLM use of Oura data is only allowed through Oura's MCP Server. This contradicts `docs/03-architecture.md` step 4 (summary scores sent to Claude), PRD FR-2 ("using that day's data"), and the CLAUDE.md privacy rule that allows sending Claude daily summary values. Proposed: Claude sees only journal answer text (questions and tags); scores are compared in plain Python; any score-aware question is picked by app code from a fixed set, not written by Claude. Needs Ava's decision, then updates to the PRD, architecture, and CLAUDE.md. The registration documents (`docs/oura-app-registration.md`, `docs/legal/`) already assume this.
+
+### Journal answers that mention Oura scores
+Found with the decision above. If Ava types her readiness or sleep score into an answer, that text would reach Claude. When tag extraction (FR-4) is built, decide whether to strip numbers that look like scores before sending, or just note it in the privacy policy.
