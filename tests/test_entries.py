@@ -11,6 +11,7 @@ from entries import (
     get_entry,
     list_entries,
     parse_tags,
+    update_entry,
 )
 
 DATE = datetime.date(2026, 1, 5)
@@ -94,3 +95,22 @@ def test_get_entry_not_found():
     client = MagicMock()
     _get_chain(client).execute.return_value.data = []
     assert get_entry(client, 99) is None
+
+
+def test_update_entry_sends_answers_and_tags_not_date():
+    client = MagicMock()
+    update_entry(client, 7, answers("Edited", "", ""), " Stress, nap,stress")
+    client.table.assert_called_once_with("entries")
+    changes = client.table.return_value.update.call_args.args[0]
+    assert changes["answers"] == answers("Edited", "", "")
+    assert changes["tags"] == ["stress", "nap"]
+    assert "updated_at" in changes
+    assert "entry_date" not in changes
+    client.table.return_value.update.return_value.eq.assert_called_once_with("id", 7)
+
+
+def test_update_entry_all_blank_raises():
+    client = MagicMock()
+    with pytest.raises(ValueError):
+        update_entry(client, 7, answers("", " ", ""), "stress")
+    client.table.assert_not_called()

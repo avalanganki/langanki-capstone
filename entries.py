@@ -1,3 +1,5 @@
+import datetime
+
 from postgrest.exceptions import APIError
 
 QUESTIONS = (
@@ -43,3 +45,15 @@ def list_entries(client):
 def get_entry(client, entry_id):
     rows = client.table("entries").select("*").eq("id", entry_id).limit(1).execute().data
     return rows[0] if rows else None
+
+
+def update_entry(client, entry_id, answers, tags_text):
+    # Changes answers and tags only; entry_date stays as saved.
+    if all(not a["answer"].strip() for a in answers):
+        raise ValueError("Answer at least one question to save.")
+    changes = {
+        "answers": answers,
+        "tags": parse_tags(tags_text),
+        "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+    }
+    return client.table("entries").update(changes).eq("id", entry_id).execute()
