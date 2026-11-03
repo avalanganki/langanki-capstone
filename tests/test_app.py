@@ -6,26 +6,44 @@ from streamlit.testing.v1 import AppTest
 
 
 class FakeClient:
-    """In-memory stand-in for the Supabase client: enforces one entry per date."""
+    """In-memory stand-in for the Supabase client.
 
-    def __init__(self, rows=()):
-        self.rows = []
+    Tables: `entries` (one entry per date) and `oura_connection` (upsert on id).
+    """
+
+    def __init__(self, rows=(), connection=None):
+        self.tables = {"entries": [], "oura_connection": []}
         self._next_id = 1
         for row in rows:
             self._add(dict(row))
+        if connection:
+            self.tables["oura_connection"].append({"id": 1, **connection})
+
+    @property
+    def rows(self):
+        return self.tables["entries"]
+
+    @property
+    def connection_rows(self):
+        return self.tables["oura_connection"]
 
     def _add(self, row):
         row["id"] = self._next_id
         self._next_id += 1
-        self.rows.append(row)
+        self.tables["entries"].append(row)
 
     def table(self, name):
-        assert name == "entries"
-        self._query = {"op": None, "eq": None, "desc": False, "limit": None}
+        assert name in self.tables, name
+        self._name = name
+        self._query = {"op": None, "eq": None, "desc": None, "limit": None}
         return self
 
     def insert(self, row):
         self._query.update(op="insert", row=row)
+        return self
+
+    def upsert(self, row):
+        self._query.update(op="upsert", row=row)
         return self
 
     def delete(self):
@@ -55,27 +73,48 @@ class FakeClient:
 
     def execute(self):
         q = self._query
+        table = self.tables[self._name]
         if q["op"] == "insert":
             row = dict(q["row"])
-            if any(r["entry_date"] == row["entry_date"] for r in self.rows):
+            if any(r["entry_date"] == row["entry_date"] for r in table):
                 raise APIError({"code": "23505", "message": "duplicate key"})
             self._add(row)
             return MagicMock(data=[row])
-        rows = list(self.rows)
+        if q["op"] == "upsert":
+            row = dict(q["row"])
+            self.tables[self._name] = [r for r in table if r["id"] != row["id"]] + [row]
+            return MagicMock(data=[row])
+        rows = list(table)
         if q["eq"]:
             column, value = q["eq"]
             rows = [r for r in rows if r[column] == value]
         if q["op"] == "delete":
-            self.rows = [r for r in self.rows if r not in rows]
+            self.tables[self._name] = [r for r in table if r not in rows]
             return MagicMock(data=rows)
         if q["op"] == "update":
             for r in rows:
                 r.update(q["changes"])
             return MagicMock(data=rows)
-        rows.sort(key=lambda r: r["entry_date"], reverse=q["desc"])
+        if q["desc"] is not None:
+            rows.sort(key=lambda r: r["entry_date"], reverse=q["desc"])
         if q["limit"] is not None:
             rows = rows[: q["limit"]]
         return MagicMock(data=rows)
+
+
+BLANK_OURA = {"client_id": "", "client_secret": "", "redirect_uri": "http://localhost:8501/callback/"}
+FAKE_OURA = {
+    "client_id": "test-client-id",
+    "client_secret": "test-client-secret",
+    "redirect_uri": "http://localhost:8501/callback/",
+}
+
+
+@pytest.fixture(autouse=True)
+def oura_settings():
+    # Never read the real .env in tests. Default: Oura not configured yet.
+    with patch("oura.get_settings", return_value=dict(BLANK_OURA)) as settings:
+        yield settings
 
 
 @pytest.fixture
@@ -347,3 +386,87 @@ def test_deleting_last_entry_shows_empty_state(fake):
     assert fake.rows == []
     assert any(s.value.startswith("Deleted your entry for ") for s in at.success)
     assert "No entries yet. Save one from Tonight." in [i.value for i in at.info]
+
+
+# --- Connect Oura (issue #7) ---
+
+TOKENS = {
+    "access_token": "test-access",
+    "refresh_token": "test-refresh",
+    "expires_at": "2000-01-02T00:00:00+00:00",
+    "scope": "daily",
+}
+
+
+def all_text(at):
+    texts = [m.value for m in at.markdown]
+    for kind in (at.success, at.info, at.warning, at.caption):
+        texts += [e.value for e in kind]
+    return " ".join(str(t) for t in texts)
+
+
+def run_callback(params):
+    at = AppTest.from_file("app.py")
+    for k, v in params.items():
+        at.query_params[k] = v
+    return at.run(timeout=30)
+
+
+def test_oura_not_configured_shows_waiting_message(fake):
+    at = run_app()
+    assert not at.exception
+    assert "Waiting for Oura app approval. Showing sample data." in [i.value for i in at.sidebar.info]
+
+
+def test_oura_configured_shows_connect_button(fake, oura_settings):
+    oura_settings.return_value = dict(FAKE_OURA)
+    at = run_app()
+    assert not at.exception
+    buttons = at.get("link_button")
+    assert len(buttons) == 1
+    assert buttons[0].proto.label == "Connect Oura"
+    assert "scope=daily" in buttons[0].proto.url
+
+
+def test_callback_saves_connection(fake, oura_settings):
+    oura_settings.return_value = dict(FAKE_OURA)
+    with patch("oura.finish_sign_in", return_value=dict(TOKENS)) as finish:
+        at = run_callback({"code": "the-code", "state": "the-state"})
+    assert not at.exception
+    finish.assert_called_once_with("the-state", "the-code")
+    assert "Connected to Oura." in [s.value for s in at.success]
+    assert len(fake.connection_rows) == 1
+    assert fake.connection_rows[0]["access_token"] == "test-access"
+    assert "test-access" not in all_text(at)
+    assert at.button(key="oura_disconnect")  # sidebar now offers Disconnect
+
+
+def test_callback_with_bad_state_saves_nothing(fake, oura_settings):
+    oura_settings.return_value = dict(FAKE_OURA)
+    with patch("oura.requests.post") as post:
+        at = run_callback({"code": "the-code", "state": "unknown"})
+    assert not at.exception
+    post.assert_not_called()
+    assert "Sign-in expired or didn't match. Try Connect again." in [w.value for w in at.warning]
+    assert fake.connection_rows == []
+
+
+def test_callback_cancelled(fake, oura_settings):
+    oura_settings.return_value = dict(FAKE_OURA)
+    at = run_callback({"error": "access_denied"})
+    assert not at.exception
+    assert "Oura connection was cancelled." in [w.value for w in at.warning]
+    assert fake.connection_rows == []
+
+
+def test_disconnect_removes_tokens(oura_settings):
+    oura_settings.return_value = dict(FAKE_OURA)
+    client = FakeClient(connection=dict(TOKENS))
+    with patch("db.get_client", return_value=client), patch("oura.requests.get") as revoke:
+        at = run_app()
+        at = at.button(key="oura_disconnect").click().run(timeout=30)
+    assert not at.exception
+    assert revoke.called
+    assert client.connection_rows == []
+    assert "Disconnected from Oura." in [s.value for s in at.success]
+    assert at.get("link_button")  # back to Connect
