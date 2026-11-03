@@ -117,3 +117,29 @@ Decided: Edit, Save changes, and Cancel use button callbacks instead of `st.reru
 ### Check 4 (AC5): tests pass without real Supabase
 
 `pytest`: 29 passed. `streamlit run app.py --server.headless true` starts, `/_stcore/health` returns `ok`, and the server log has no errors.
+
+## Delete (issue #6)
+
+Runs on 2026-11-03.
+
+### Check 1 (AC1, AC3): delete the middle of 3 entries
+
+Covered by `test_delete_confirm_removes_only_selected_entry`: with synthetic entries on 2000-01-01, 01-03, and 01-05, selecting 01-03 and pressing Delete shows "Delete your entry for 2000-01-03? This can't be undone." and deletes nothing yet. "Yes, delete" then shows "Deleted your entry for 2000-01-03.", leaves 2 rows, lists the other two newest first with "2 entries.", and leaves their answers and tags unchanged. `test_delete_entry_deletes_by_id_only` checks the query matches on `id` alone.
+
+`test_deleting_last_entry_shows_empty_state`: deleting the only entry shows the "Deleted..." message and the empty state.
+
+2026-11-03: Ava deleted the middle of 3 synthetic entries in the running app; the list dropped it, the others were unchanged, and the Supabase row count went from 3 to 2.
+
+### Check 2 (AC2): Cancel
+
+Covered by `test_delete_cancel_keeps_entry`: Delete then Cancel keeps all 3 rows and returns to the normal view.
+
+2026-11-03: Ava pressed Delete then Cancel in the running app; the entry stayed listed.
+
+### Check 3 (AC4): tests pass without real Supabase
+
+`pytest`: 33 passed. `streamlit run app.py --server.headless true` starts, `/_stcore/health` returns `ok`, and the server log has no errors.
+
+### Check 4: full create, read, update, delete pass
+
+2026-11-03: Ava created, opened, edited, and deleted one synthetic entry end to end in the running app with no errors.

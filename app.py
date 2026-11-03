@@ -9,6 +9,7 @@ from entries import (
     create_entry,
     get_entry,
     list_entries,
+    delete_entry,
     parse_tags,
     update_entry,
 )
@@ -78,9 +79,26 @@ def save_edit(entry):
     st.session_state.flash = f"Updated your entry for {entry['entry_date']}."
 
 
+def start_delete(entry_id):
+    st.session_state.deleting = entry_id
+
+
+def cancel_delete():
+    st.session_state.deleting = None
+
+
+def confirm_delete(entry):
+    delete_entry(db.get_client(), entry["id"])
+    st.session_state.deleting = None
+    st.session_state.flash = f"Deleted your entry for {entry['entry_date']}."
+
+
 with past:
     client = db.get_client()
     saved = list_entries(client)
+    # Shown before the empty state so "Deleted..." still appears after deleting the last entry.
+    if "flash" in st.session_state:
+        st.success(st.session_state.pop("flash"))
     if not saved:
         st.info("No entries yet. Save one from Tonight.")
     else:
@@ -88,8 +106,6 @@ with past:
         chosen = st.selectbox("Entry", list(dates), format_func=lambda i: format_date(dates[i]))
         st.caption(f"{len(saved)} {'entry' if len(saved) == 1 else 'entries'}.")
         entry = get_entry(client, chosen)
-        if "flash" in st.session_state:
-            st.success(st.session_state.pop("flash"))
         if entry is None:
             st.warning("That entry no longer exists.")
         elif st.session_state.get("editing") == entry["id"]:
@@ -113,4 +129,10 @@ with past:
                 with st.container(border=True):
                     st.write(item["answer"].strip() or "No answer")
             st.write("Tags: " + (", ".join(entry["tags"]) or "No tags"))
-            st.button("Edit", key="edit", on_click=start_edit, args=(entry["id"],))
+            if st.session_state.get("deleting") == entry["id"]:
+                st.warning(f"Delete your entry for {entry['entry_date']}? This can't be undone.")
+                st.button("Yes, delete", key="confirm_delete", on_click=confirm_delete, args=(entry,))
+                st.button("Cancel", key="cancel_delete", on_click=cancel_delete)
+            else:
+                st.button("Edit", key="edit", on_click=start_edit, args=(entry["id"],))
+                st.button("Delete", key="delete", on_click=start_delete, args=(entry["id"],))
