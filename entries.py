@@ -33,3 +33,13 @@ def create_entry(client, entry_date, answers, tags):
         if e.code == UNIQUE_VIOLATION:
             raise DuplicateEntryError(entry_date) from None
         raise
+
+
+def list_entries(client):
+    # Newest entry_date first.
+    return client.table("entries").select("*").order("entry_date", desc=True).execute().data
+
+
+def get_entry(client, entry_id):
+    rows = client.table("entries").select("*").eq("id", entry_id).limit(1).execute().data
+    return rows[0] if rows else None

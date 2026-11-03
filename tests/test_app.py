@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from postgrest.exceptions import APIError
@@ -8,23 +8,59 @@ from streamlit.testing.v1 import AppTest
 class FakeClient:
     """In-memory stand-in for the Supabase client: enforces one entry per date."""
 
-    def __init__(self):
+    def __init__(self, rows=()):
         self.rows = []
+        self._next_id = 1
+        for row in rows:
+            self._add(dict(row))
+
+    def _add(self, row):
+        row["id"] = self._next_id
+        self._next_id += 1
+        self.rows.append(row)
 
     def table(self, name):
         assert name == "entries"
+        self._query = {"op": None, "eq": None, "desc": False, "limit": None}
         return self
 
     def insert(self, row):
-        self._pending = row
+        self._query.update(op="insert", row=row)
+        return self
+
+    def select(self, columns):
+        self._query["op"] = "select"
+        return self
+
+    def order(self, column, desc=False):
+        assert column == "entry_date"
+        self._query["desc"] = desc
+        return self
+
+    def eq(self, column, value):
+        self._query["eq"] = (column, value)
+        return self
+
+    def limit(self, n):
+        self._query["limit"] = n
         return self
 
     def execute(self):
-        row = self._pending
-        if any(r["entry_date"] == row["entry_date"] for r in self.rows):
-            raise APIError({"code": "23505", "message": "duplicate key"})
-        self.rows.append(row)
-        return row
+        q = self._query
+        if q["op"] == "insert":
+            row = dict(q["row"])
+            if any(r["entry_date"] == row["entry_date"] for r in self.rows):
+                raise APIError({"code": "23505", "message": "duplicate key"})
+            self._add(row)
+            return MagicMock(data=[row])
+        rows = list(self.rows)
+        if q["eq"]:
+            column, value = q["eq"]
+            rows = [r for r in rows if r[column] == value]
+        rows.sort(key=lambda r: r["entry_date"], reverse=q["desc"])
+        if q["limit"] is not None:
+            rows = rows[: q["limit"]]
+        return MagicMock(data=rows)
 
 
 @pytest.fixture
@@ -101,3 +137,72 @@ def test_second_save_for_same_date_is_refused(fake):
     )
     assert len(fake.rows) == 1
     assert fake.rows[0]["answers"][0]["answer"] == "Low energy"
+
+
+# --- Past entries (issue #4) ---
+
+QS = (
+    "How was your energy this afternoon?",
+    "When was your last caffeine today?",
+    "How did you wind down tonight?",
+)
+
+
+def entry(date, texts, tags):
+    return {
+        "entry_date": date,
+        "answers": [{"question": q, "answer": t} for q, t in zip(QS, texts)],
+        "tags": tags,
+    }
+
+
+@pytest.fixture
+def two_entries():
+    client = FakeClient(
+        [
+            entry("2000-01-01", ["synthetic older", "", "read"], []),
+            entry("2000-01-05", ["synthetic newer", "2pm", "walk"], ["late caffeine", "stress"]),
+        ]
+    )
+    with patch("db.get_client", return_value=client):
+        yield client
+
+
+def body_text(at):
+    return [m.value for m in at.markdown]
+
+
+def test_past_entries_empty_state(fake):
+    at = run_app()
+    assert not at.exception
+    assert "No entries yet. Save one from Tonight." in [i.value for i in at.info]
+
+
+def test_past_entries_listed_newest_first_with_count(two_entries):
+    at = run_app()
+    assert not at.exception
+    box = at.selectbox[0]
+    assert box.options == ["Wed, Jan 5, 2000", "Sat, Jan 1, 2000"]
+    assert box.value == 2  # newest selected by default
+    assert "2 entries." in [c.value for c in at.caption]
+
+
+def test_selecting_entry_shows_answers_and_tags(two_entries):
+    at = run_app()
+    at.selectbox[0].set_value(1).run(timeout=30)
+    text = body_text(at)
+    for q in QS:
+        assert q in text
+    assert "synthetic older" in text
+    assert "No answer" in text
+    assert "Tags: No tags" in text
+
+    at.selectbox[0].set_value(2).run(timeout=30)
+    text = body_text(at)
+    assert "synthetic newer" in text and "No answer" not in text
+    assert "Tags: late caffeine, stress" in text
+
+
+def test_single_entry_count_is_singular(fake):
+    at = save(run_app())
+    assert "1 entry." in [c.value for c in at.caption]
