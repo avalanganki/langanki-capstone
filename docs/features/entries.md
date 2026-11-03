@@ -128,13 +128,13 @@ Covered by `test_delete_confirm_removes_only_selected_entry`: with synthetic ent
 
 `test_deleting_last_entry_shows_empty_state`: deleting the only entry shows the "Deleted..." message and the empty state.
 
-Pending: in the running app with 3 synthetic entries, delete the middle one; list before and after, and the Supabase row count going from 3 to 2.
+2026-11-03: Ava deleted the middle of 3 synthetic entries in the running app; the list dropped it, the others were unchanged, and the Supabase row count went from 3 to 2.
 
 ### Check 2 (AC2): Cancel
 
 Covered by `test_delete_cancel_keeps_entry`: Delete then Cancel keeps all 3 rows and returns to the normal view.
 
-Pending: screenshot after Cancel showing the entry still listed.
+2026-11-03: Ava pressed Delete then Cancel in the running app; the entry stayed listed.
 
 ### Check 3 (AC4): tests pass without real Supabase
 
@@ -142,4 +142,4 @@ Pending: screenshot after Cancel showing the entry still listed.
 
 ### Check 4: full create, read, update, delete pass
 
-Pending: Ava creates, opens, edits, and deletes one synthetic entry end to end in the running app.
+2026-11-03: Ava created, opened, edited, and deleted one synthetic entry end to end in the running app with no errors.
