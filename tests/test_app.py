@@ -28,6 +28,10 @@ class FakeClient:
         self._query.update(op="insert", row=row)
         return self
 
+    def update(self, changes):
+        self._query.update(op="update", changes=changes)
+        return self
+
     def select(self, columns):
         self._query["op"] = "select"
         return self
@@ -57,6 +61,10 @@ class FakeClient:
         if q["eq"]:
             column, value = q["eq"]
             rows = [r for r in rows if r[column] == value]
+        if q["op"] == "update":
+            for r in rows:
+                r.update(q["changes"])
+            return MagicMock(data=rows)
         rows.sort(key=lambda r: r["entry_date"], reverse=q["desc"])
         if q["limit"] is not None:
             rows = rows[: q["limit"]]
@@ -206,3 +214,71 @@ def test_selecting_entry_shows_answers_and_tags(two_entries):
 def test_single_entry_count_is_singular(fake):
     at = save(run_app())
     assert "1 entry." in [c.value for c in at.caption]
+
+
+# --- Edit an entry (issue #5) ---
+
+
+def open_edit(at):
+    return at.button(key="edit").click().run(timeout=30)
+
+
+def edit_areas(at):
+    # Tonight's 3 text areas come first; the edit form's follow.
+    return at.text_area[3:]
+
+
+def test_edit_answer_and_tag_then_save(two_entries):
+    at = open_edit(run_app())  # newest entry (2000-01-05) is selected by default
+    assert not at.exception
+    areas = edit_areas(at)
+    assert [a.value for a in areas] == ["synthetic newer", "2pm", "walk"]
+    tags_box = at.text_input[1]
+    assert tags_box.value == "late caffeine, stress"
+
+    areas[0].input("synthetic edited")
+    tags_box.input("stress, Nap")
+    at = at.button(key="save_changes").click().run(timeout=30)
+    assert not at.exception
+    assert "Updated your entry for 2000-01-05." in [s.value for s in at.success]
+
+    row = next(r for r in two_entries.rows if r["id"] == 2)
+    assert row["answers"][0]["answer"] == "synthetic edited"
+    assert row["tags"] == ["stress", "nap"]
+    assert row["entry_date"] == "2000-01-05"
+    assert "updated_at" in row
+
+    # Back in view mode with the new values.
+    text = body_text(at)
+    assert "synthetic edited" in text
+    assert "Tags: stress, nap" in text
+    assert len(at.text_area) == 3
+
+
+def test_cancel_leaves_entry_unchanged(two_entries):
+    at = open_edit(run_app())
+    edit_areas(at)[0].input("should not save")
+    at = at.button(key="cancel_edit").click().run(timeout=30)
+    assert not at.exception
+    row = next(r for r in two_entries.rows if r["id"] == 2)
+    assert row["answers"][0]["answer"] == "synthetic newer"
+    assert "updated_at" not in row
+    assert "synthetic newer" in body_text(at)
+    assert len(at.text_area) == 3
+
+
+def test_edit_all_blank_is_refused(two_entries):
+    at = open_edit(run_app())
+    for a in edit_areas(at):
+        a.input("")
+    at = at.button(key="save_changes").click().run(timeout=30)
+    assert "Answer at least one question to save." in [w.value for w in at.warning]
+    row = next(r for r in two_entries.rows if r["id"] == 2)
+    assert row["answers"][0]["answer"] == "synthetic newer"
+    assert len(edit_areas(at)) == 3  # still editing
+
+
+def test_edit_mode_date_is_not_an_input(two_entries):
+    at = open_edit(run_app())
+    assert "Date: Wed, Jan 5, 2000" in body_text(at)
+    assert len(at.date_input) == 1  # only Tonight's date picker

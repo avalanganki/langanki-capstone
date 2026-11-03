@@ -85,3 +85,35 @@ Covered by `test_selecting_entry_shows_answers_and_tags`: every question shown, 
 `pytest`: 23 passed. App tests patch `db.get_client` with an in-memory fake; `list_entries`/`get_entry` tests use a `MagicMock` client.
 
 `streamlit run app.py --server.headless true` starts, `/_stcore/health` returns `ok`, and the server log has no errors.
+
+## Update (issue #5)
+
+Runs on 2026-11-03.
+
+### Check 1 (AC1, AC2): edit an answer and a tag
+
+Covered by `test_edit_answer_and_tag_then_save`: the edit form opens pre-filled with the saved answers and tags ("late caffeine, stress"). After changing an answer and the tags to "stress, Nap", it shows "Updated your entry for 2000-01-05.", stores tags `["stress", "nap"]` with `updated_at` set and `entry_date` unchanged, and returns to view mode with the new values. `test_update_entry_sends_answers_and_tags_not_date` checks that the update never includes `entry_date`.
+
+Pending: on a synthetic entry, change one answer and one tag in the running app; before/after screenshots and the updated row with its new `updated_at` in Supabase.
+
+### Check 2 (AC3): Cancel
+
+Covered by `test_cancel_leaves_entry_unchanged`: after typing a change and pressing Cancel, the stored row and the view are unchanged and `updated_at` is not touched.
+
+Pending: screenshot after Cancel showing the original values.
+
+### Check 3 (AC4): date can't change
+
+Covered by `test_edit_mode_date_is_not_an_input`: edit mode shows "Date: Wed, Jan 5, 2000" as text, and the only date input on the page is Tonight's.
+
+Pending: screenshot of edit mode.
+
+### Also: all-blank edit refused
+
+`test_edit_all_blank_is_refused` and `test_update_entry_all_blank_raises`: clearing every answer shows "Answer at least one question to save.", nothing is saved, and the form stays open.
+
+Decided: Edit, Save changes, and Cancel use button callbacks instead of `st.rerun()`, so the page never shows a stale edit form after leaving edit mode.
+
+### Check 4 (AC5): tests pass without real Supabase
+
+`pytest`: 29 passed. `streamlit run app.py --server.headless true` starts, `/_stcore/health` returns `ok`, and the server log has no errors.

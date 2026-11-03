@@ -10,6 +10,7 @@ from entries import (
     get_entry,
     list_entries,
     parse_tags,
+    update_entry,
 )
 from sample_data import load_nights
 
@@ -55,6 +56,28 @@ def format_date(iso):
     return f"{d:%a, %b} {d.day}, {d.year}"
 
 
+def start_edit(entry_id):
+    st.session_state.editing = entry_id
+
+
+def cancel_edit():
+    st.session_state.editing = None
+
+
+def save_edit(entry):
+    answers = [
+        {"question": item["question"], "answer": st.session_state[f"edit_answer_{i}"]}
+        for i, item in enumerate(entry["answers"])
+    ]
+    try:
+        update_entry(db.get_client(), entry["id"], answers, st.session_state.edit_tags)
+    except ValueError:
+        st.session_state.edit_error = "Answer at least one question to save."
+        return
+    st.session_state.editing = None
+    st.session_state.flash = f"Updated your entry for {entry['entry_date']}."
+
+
 with past:
     client = db.get_client()
     saved = list_entries(client)
@@ -65,11 +88,29 @@ with past:
         chosen = st.selectbox("Entry", list(dates), format_func=lambda i: format_date(dates[i]))
         st.caption(f"{len(saved)} {'entry' if len(saved) == 1 else 'entries'}.")
         entry = get_entry(client, chosen)
+        if "flash" in st.session_state:
+            st.success(st.session_state.pop("flash"))
         if entry is None:
             st.warning("That entry no longer exists.")
+        elif st.session_state.get("editing") == entry["id"]:
+            # The date is shown as text, not an input: an entry's date can't change.
+            st.write(f"Date: {format_date(entry['entry_date'])}")
+            with st.form(f"edit_{entry['id']}", enter_to_submit=False):
+                for i, item in enumerate(entry["answers"]):
+                    st.text_area(item["question"], value=item["answer"], key=f"edit_answer_{i}")
+                st.text_input(
+                    "Tags (comma-separated)", value=", ".join(entry["tags"]), key="edit_tags"
+                )
+                st.form_submit_button(
+                    "Save changes", key="save_changes", on_click=save_edit, args=(entry,)
+                )
+                st.form_submit_button("Cancel", key="cancel_edit", on_click=cancel_edit)
+            if "edit_error" in st.session_state:
+                st.warning(st.session_state.pop("edit_error"))
         else:
             for item in entry["answers"]:
                 st.write(item["question"])
                 with st.container(border=True):
                     st.write(item["answer"].strip() or "No answer")
             st.write("Tags: " + (", ".join(entry["tags"]) or "No tags"))
+            st.button("Edit", key="edit", on_click=start_edit, args=(entry["id"],))
