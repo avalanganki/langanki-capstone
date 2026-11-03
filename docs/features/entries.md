@@ -8,19 +8,19 @@ Evidence for the five checks. Runs on 2026-10-29, Python 3.9.6, Streamlit 1.50.0
 
 `0002_entries.sql` is applied: a count query against `entries` with the app's key returned 0 rows before any saves.
 
-Pending: Ava saves a synthetic entry in the running app, screenshots "Saved your entry for <date>.", and shows the row in the Supabase table view.
+2026-11-03: Ava saved synthetic entries in the running app (for example `2000-01-01` with tags `synthetic, test`, and `2000-01-02`). The Supabase table view shows one row per date with `answers` as question/answer pairs and `tags` as `text[]`. Screenshot reviewed in session, not committed.
 
 ### Check 2 (AC2, AC3): blank and duplicate saves refused
 
 Covered by `test_blank_form_is_refused` and `test_second_save_for_same_date_is_refused` (in-memory fake client; row count stays 0 and 1).
 
-Pending: screenshots of both messages in the running app with the row count unchanged.
+2026-11-03, in the running app: a blank save showed "Answer at least one question to save." and saved nothing. Filling in answers for the same date then saved normally, so the blank attempt didn't use up the date. The table has no duplicate `entry_date` values; skipped identity ids (3, 6, 7) match inserts that were refused.
 
 ### Check 3 (AC4): tags cleaned
 
 `parse_tags(" Late Caffeine, stress,,stress ")` returns `["late caffeine", "stress"]` (`test_parse_tags`, `test_save_shows_confirmation_and_stores_row`).
 
-Pending: the saved `tags` value from the Check 1 row.
+Saved rows in Supabase show lowercased, trimmed tags (for example `["late caffeine"]`, `["synthetic","test"]`).
 
 ### Check 4 (AC5): tests pass without real Supabase
 
@@ -48,6 +48,10 @@ tests/test_sample_data.py::test_missing_field_raises PASSED
 
 `streamlit run app.py --server.headless true` starts and `/_stcore/health` returns `ok`. Only the known `NotOpenSSLWarning` and Watchdog notices are printed.
 
-### Check 5: privacy
+### Check 5 (AC6): Enter does not save
+
+2026-11-03, in the running app: typing in the Tags box and pressing Enter saved nothing; clicking Save saved the entry. Also covered by an `AppTest` (16 tests pass).
+
+### Check 6: privacy
 
 `git grep -nE "sb_secret_|sb_publishable_|eyJ...|supabase\.co"` over tracked files returns nothing. `.env` is gitignored. The app prints no answers, tags, or keys; the server log above shows only startup lines.
