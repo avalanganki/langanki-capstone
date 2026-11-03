@@ -94,19 +94,19 @@ Runs on 2026-11-03.
 
 Covered by `test_edit_answer_and_tag_then_save`: the edit form opens pre-filled with the saved answers and tags ("late caffeine, stress"). After changing an answer and the tags to "stress, Nap", it shows "Updated your entry for 2000-01-05.", stores tags `["stress", "nap"]` with `updated_at` set and `entry_date` unchanged, and returns to view mode with the new values. `test_update_entry_sends_answers_and_tags_not_date` checks that the update never includes `entry_date`.
 
-Pending: on a synthetic entry, change one answer and one tag in the running app; before/after screenshots and the updated row with its new `updated_at` in Supabase.
+2026-11-03: Ava changed one answer and one tag on a synthetic entry in the running app; the view and the Supabase row showed the new values and a new `updated_at`.
 
 ### Check 2 (AC3): Cancel
 
 Covered by `test_cancel_leaves_entry_unchanged`: after typing a change and pressing Cancel, the stored row and the view are unchanged and `updated_at` is not touched.
 
-Pending: screenshot after Cancel showing the original values.
+2026-11-03: Ava made a change and pressed Cancel in the running app; the original values remained.
 
 ### Check 3 (AC4): date can't change
 
 Covered by `test_edit_mode_date_is_not_an_input`: edit mode shows "Date: Wed, Jan 5, 2000" as text, and the only date input on the page is Tonight's.
 
-Pending: screenshot of edit mode.
+2026-11-03: Ava confirmed in the running app that edit mode shows the date as text, not an input.
 
 ### Also: all-blank edit refused
 

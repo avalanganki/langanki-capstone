@@ -11,3 +11,4 @@ Completed items moved from `docs/todo.md`.
 
 - [x] #3 US02 Create: save tonight's entry. Merged 2026-11-03. Evidence: `docs/features/entries.md`
 - [x] #4 US02 Read: list and open past entries. Merged 2026-11-03. Evidence: `docs/features/entries.md`
+- [x] #5 US02 Update: edit answers and tags. Merged 2026-11-03. Evidence: `docs/features/entries.md`
