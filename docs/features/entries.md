@@ -64,7 +64,7 @@ Runs on 2026-11-03.
 
 Covered by `test_past_entries_empty_state` (fake client with no rows shows "No entries yet. Save one from Tonight.").
 
-Pending: screenshot of Past entries with an empty table. The real table has rows, so this can come from a test project or be skipped in favor of the test.
+Decided: the real table already has rows, so the AppTest above is the evidence for the empty state rather than deleting data.
 
 ### Check 2 (AC2): newest first with count
 
@@ -72,13 +72,13 @@ Covered by `test_past_entries_listed_newest_first_with_count` (entries saved out
 
 Decided: one entry reads "1 entry." rather than "1 entries." (`test_single_entry_count_is_singular`).
 
-Pending: screenshot of the list with 3 synthetic entries on different dates.
+2026-11-03: Ava checked in the running app that synthetic entries saved out of order list newest first with the right count.
 
 ### Check 3 (AC3): open an entry
 
 Covered by `test_selecting_entry_shows_answers_and_tags`: every question shown, each answer in a bordered card, blank answers as "No answer", tags as "Tags: late caffeine, stress" or "Tags: No tags". `get_entry` against the real table found an existing id and returned `None` for a missing one.
 
-Pending: screenshot of one opened entry compared with its row in Supabase.
+2026-11-03: Ava opened an entry in the running app and it matched its row in Supabase.
 
 ### Check 4 (AC4): tests pass without real Supabase
 
