@@ -6,3 +6,7 @@ Completed items moved from `docs/todo.md`.
 
 - [x] #1 US00 Foundations: running skeleton. Merged 2026-10-22. Evidence: `docs/features/foundations.md`
 - [x] #2 US01 Prototype: apply Oct 1 review notes. Reviewed by Ava and merged 2026-10-22.
+
+## v0.2.0
+
+- [x] #3 US02 Create: save tonight's entry. Merged 2026-11-03. Evidence: `docs/features/entries.md`

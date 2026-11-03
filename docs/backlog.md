@@ -33,3 +33,15 @@ Found in `docs/notes.md` (Oct 1, item 3). Ava answers on a screen, so a question
 
 ### Drop the `test_entries` hello-world table
 Found while planning US02. `supabase/migrations/0001_test_entries.sql` is left over from the Supabase hello-world and the app no longer uses it. Add a migration that drops it once `entries` is live.
+
+### Off-topic answers: "not mentioned" is not "none"
+Found testing US02 Create (answering the caffeine question with only food). The entry saves as-is, which is right, but a missing `caffeine` tag would later read as "no caffeine" in trends. When tag extraction (FR-4) and trends (FR-6/7) are built, treat a night with no caffeine tag as unknown, not zero, unless the answer says none. Possibly a short neutral follow-up when an answer doesn't address its question.
+
+### Nights with no ring data
+Found testing US02 Read. If the ring wasn't worn, Oura has no sleep score for that night. When Oura linking (FR-5) is built, the entry should still open and show "No ring data for this night" instead of blanks or zeros, and that night is left out of any correlation (and out of its night count).
+
+### Tag source: typed vs found in answers
+Found testing US02 Update. Ava can add tags that aren't in her answers, which is allowed (she knows things she didn't write). Once Claude extracts tags (FR-4), record whether each tag was typed by Ava or found by Claude, so an edit never gets silently overwritten by re-extraction.
+
+### Delete a range of entries (e.g. a week)
+Found testing US02 Delete. #6 deletes one entry at a time; there is no bulk delete. FR-11 asks for single-entry and delete-all only. If a range delete is wanted, it needs its own confirm step. Trends and correlations must be computed from whatever entries remain and the "based on N nights" count must drop to match; deleted nights show as gaps, never filled in.

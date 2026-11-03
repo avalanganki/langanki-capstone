@@ -1,12 +1,103 @@
+from unittest.mock import patch
+
+import pytest
+from postgrest.exceptions import APIError
 from streamlit.testing.v1 import AppTest
 
 
-def test_app_shows_title_and_sample_nights():
+class FakeClient:
+    """In-memory stand-in for the Supabase client: enforces one entry per date."""
+
+    def __init__(self):
+        self.rows = []
+
+    def table(self, name):
+        assert name == "entries"
+        return self
+
+    def insert(self, row):
+        self._pending = row
+        return self
+
+    def execute(self):
+        row = self._pending
+        if any(r["entry_date"] == row["entry_date"] for r in self.rows):
+            raise APIError({"code": "23505", "message": "duplicate key"})
+        self.rows.append(row)
+        return row
+
+
+@pytest.fixture
+def fake():
+    client = FakeClient()
+    with patch("db.get_client", return_value=client):
+        yield client
+
+
+def run_app():
     # Default 3s timeout is too short for the first cold import of pandas.
-    at = AppTest.from_file("app.py").run(timeout=30)
+    return AppTest.from_file("app.py").run(timeout=30)
+
+
+def save(at, answer="Low energy", tags=""):
+    at.text_area[0].input(answer)
+    at.text_input[0].input(tags)
+    return at.button[0].click().run(timeout=30)
+
+
+def test_app_shows_title_and_sample_nights(fake):
+    at = run_app()
     assert not at.exception
     assert at.title[0].value == "Patterns"
     table = at.dataframe[0].value
     assert len(table) == 4
     assert list(table.columns) == ["Date", "Sleep score", "Readiness", "HRV (ms)"]
     assert not table.isnull().values.any()
+    assert "Based on 4 nights." in [c.value for c in at.caption]
+
+
+def test_tonight_tab_has_three_questions_and_tags(fake):
+    at = run_app()
+    assert [t.label for t in at.tabs] == ["Tonight", "Past entries"]
+    assert len(at.text_area) == 3
+    assert at.text_input[0].label == "Tags (comma-separated)"
+
+
+def find_forms(node):
+    if getattr(node, "type", None) == "form":
+        yield node
+    for child in getattr(node, "children", {}).values():
+        yield from find_forms(child)
+
+
+def test_enter_key_does_not_save(fake):
+    # AppTest can't press keys, so check the form is built with Enter-to-submit off.
+    at = run_app()
+    forms = list(find_forms(at._tree))
+    assert len(forms) == 1
+    assert forms[0].proto.form.enter_to_submit is False
+
+
+def test_save_shows_confirmation_and_stores_row(fake):
+    at = save(run_app(), tags=" Late Caffeine, stress,,stress ")
+    assert not at.exception
+    date = at.date_input[0].value.isoformat()
+    assert at.success[0].value == f"Saved your entry for {date}."
+    assert len(fake.rows) == 1
+    assert fake.rows[0]["tags"] == ["late caffeine", "stress"]
+
+
+def test_blank_form_is_refused(fake):
+    at = save(run_app(), answer="")
+    assert at.warning[0].value == "Answer at least one question to save."
+    assert fake.rows == []
+
+
+def test_second_save_for_same_date_is_refused(fake):
+    at = save(run_app())
+    at = save(at, answer="Different answer")
+    assert at.warning[0].value == (
+        "You already have an entry for this date. Edit it in Past entries."
+    )
+    assert len(fake.rows) == 1
+    assert fake.rows[0]["answers"][0]["answer"] == "Low energy"
