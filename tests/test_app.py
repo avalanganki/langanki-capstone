@@ -28,6 +28,10 @@ class FakeClient:
         self._query.update(op="insert", row=row)
         return self
 
+    def delete(self):
+        self._query["op"] = "delete"
+        return self
+
     def update(self, changes):
         self._query.update(op="update", changes=changes)
         return self
@@ -61,6 +65,9 @@ class FakeClient:
         if q["eq"]:
             column, value = q["eq"]
             rows = [r for r in rows if r[column] == value]
+        if q["op"] == "delete":
+            self.rows = [r for r in self.rows if r not in rows]
+            return MagicMock(data=rows)
         if q["op"] == "update":
             for r in rows:
                 r.update(q["changes"])
@@ -282,3 +289,61 @@ def test_edit_mode_date_is_not_an_input(two_entries):
     at = open_edit(run_app())
     assert "Date: Wed, Jan 5, 2000" in body_text(at)
     assert len(at.date_input) == 1  # only Tonight's date picker
+
+
+# --- Delete an entry (issue #6) ---
+
+
+@pytest.fixture
+def three_entries():
+    client = FakeClient(
+        [
+            entry("2000-01-03", ["synthetic middle", "", ""], ["stress"]),
+            entry("2000-01-01", ["synthetic oldest", "", ""], []),
+            entry("2000-01-05", ["synthetic newest", "", ""], ["nap"]),
+        ]
+    )
+    with patch("db.get_client", return_value=client):
+        yield client
+
+
+def test_delete_confirm_removes_only_selected_entry(three_entries):
+    at = run_app()
+    at.selectbox[0].set_value(1).run(timeout=30)  # 2000-01-03, the middle date
+    at = at.button(key="delete").click().run(timeout=30)
+    assert "Delete your entry for 2000-01-03? This can't be undone." in [
+        w.value for w in at.warning
+    ]
+    assert len(three_entries.rows) == 3  # nothing deleted until confirmed
+
+    at = at.button(key="confirm_delete").click().run(timeout=30)
+    assert not at.exception
+    assert "Deleted your entry for 2000-01-03." in [s.value for s in at.success]
+    assert sorted(r["entry_date"] for r in three_entries.rows) == ["2000-01-01", "2000-01-05"]
+    assert at.selectbox[0].options == ["Wed, Jan 5, 2000", "Sat, Jan 1, 2000"]
+    assert "2 entries." in [c.value for c in at.caption]
+    # The other entries are untouched.
+    others = {r["entry_date"]: r for r in three_entries.rows}
+    assert others["2000-01-05"]["answers"][0]["answer"] == "synthetic newest"
+    assert others["2000-01-05"]["tags"] == ["nap"]
+
+
+def test_delete_cancel_keeps_entry(three_entries):
+    at = run_app()
+    at = at.button(key="delete").click().run(timeout=30)
+    at = at.button(key="cancel_delete").click().run(timeout=30)
+    assert not at.exception
+    assert len(three_entries.rows) == 3
+    assert len(at.selectbox[0].options) == 3
+    assert "synthetic newest" in body_text(at)
+    assert at.button(key="delete")  # back to normal view
+
+
+def test_deleting_last_entry_shows_empty_state(fake):
+    at = save(run_app())
+    at = at.button(key="delete").click().run(timeout=30)
+    at = at.button(key="confirm_delete").click().run(timeout=30)
+    assert not at.exception
+    assert fake.rows == []
+    assert any(s.value.startswith("Deleted your entry for ") for s in at.success)
+    assert "No entries yet. Save one from Tonight." in [i.value for i in at.info]

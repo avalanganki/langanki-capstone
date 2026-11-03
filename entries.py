@@ -57,3 +57,8 @@ def update_entry(client, entry_id, answers, tags_text):
         "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
     }
     return client.table("entries").update(changes).eq("id", entry_id).execute()
+
+
+def delete_entry(client, entry_id):
+    # Deletes exactly one row, matched by id.
+    return client.table("entries").delete().eq("id", entry_id).execute()

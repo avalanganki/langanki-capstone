@@ -8,6 +8,7 @@ from entries import (
     QUESTIONS,
     DuplicateEntryError,
     create_entry,
+    delete_entry,
     get_entry,
     list_entries,
     parse_tags,
@@ -114,3 +115,11 @@ def test_update_entry_all_blank_raises():
     with pytest.raises(ValueError):
         update_entry(client, 7, answers("", " ", ""), "stress")
     client.table.assert_not_called()
+
+
+def test_delete_entry_deletes_by_id_only():
+    client = MagicMock()
+    delete_entry(client, 7)
+    client.table.assert_called_once_with("entries")
+    client.table.return_value.delete.assert_called_once_with()
+    client.table.return_value.delete.return_value.eq.assert_called_once_with("id", 7)
