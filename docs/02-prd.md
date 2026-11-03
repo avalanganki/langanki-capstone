@@ -3,7 +3,7 @@
 **Author:** Ava Langanki
 **Course:** IST 300, Building Software with Agentic AI
 **Date:** September 27, 2026
-**Status:** Draft v1
+**Status:** Draft v1.2 (Nov 3, 2026: Oura data is never sent to Claude; see Section 10.2)
 
 ## 1. Overview
 Patterns is a nightly reflection app. It uses Claude to ask contextual questions about the user's day, then builds a log that can be compared against Oura ring data (sleep, HRV, resting heart rate, readiness) to find which lifestyle factors affect those scores.
@@ -20,7 +20,7 @@ When I'm winding down for bed, I want to quickly capture what happened in the co
 
 ## 5. Goals
 - Make nightly logging fast enough to do every night.
-- Use Oura data to guide Claude's questions so they are relevant to that day.
+- Use the day's Oura data to choose which questions the app asks, so they are relevant to that day, without sending Oura data to Claude.
 - Build a structured log that can be analyzed alongside Oura metrics.
 - Show trends and possible correlations after enough nights have been logged.
 
@@ -32,7 +32,7 @@ When I'm winding down for bed, I want to quickly capture what happened in the co
 
 ## 7. Core User Flow
 1. **Evening:** The user opens Patterns. The app pulls the day's Oura data (activity, previous night's sleep, readiness).
-2. **Reflection:** Claude asks 3 to 5 contextual questions (e.g., "Your readiness was low this morning. How did your energy feel this afternoon?").
+2. **Reflection:** The app asks 3 to 5 short questions. App code picks score-aware questions from a fixed set using the day's Oura data (e.g., "Your readiness was low this morning. How did your energy feel this afternoon?"). Claude may add a follow-up based only on the user's written answers; it never sees Oura data.
 3. **Capture:** The user answers in free text. Claude pulls structured tags from the answers (caffeine, alcohol, workout time, stress, screen time, meal timing).
 4. **Next morning:** The app links that night's sleep data to the previous evening's entry.
 5. **Over time:** A trends view shows possible relationships between tags and scores.
@@ -40,13 +40,13 @@ When I'm winding down for bed, I want to quickly capture what happened in the co
 ## 8. Functional Requirements
 | ID | Requirement | Priority |
 |---|---|---|
-| FR-1 | Connect to the Oura API and fetch daily sleep, readiness, HRV, and heart rate data | Must |
-| FR-2 | Generate 3 to 5 contextual questions each night using that day's data | Must |
+| FR-1 | Connect to the Oura API and fetch daily summaries: sleep score, readiness, and average HRV | Must |
+| FR-2 | Ask 3 to 5 contextual questions each night. App code picks score-aware questions from a fixed set using that day's Oura data; Claude may only use the written answers | Must |
 | FR-3 | Accept free-text answers and save each entry with a date | Must |
 | FR-4 | Extract structured tags from answers | Must |
 | FR-5 | Link each evening entry to the following night's sleep data | Must |
 | FR-6 | Show trend charts of scores alongside tags | Should |
-| FR-7 | Point out possible correlations once enough data exists | Should |
+| FR-7 | Point out possible correlations once enough data exists, computed by app code and worded from templates (not by Claude), each with its number of nights | Should |
 | FR-8 | Let the user edit or correct extracted tags | Should |
 | FR-9 | Nightly reminder | Could |
 | FR-10 | Export log to CSV | Could |
@@ -63,11 +63,11 @@ When I'm winding down for bed, I want to quickly capture what happened in the co
 ### 10.1 Stack and Integration
 - **Language:** Python
 - **Oura data:** Oura API v2 using OAuth2 (authorization code flow with refresh tokens).  
-- **App registration:** Self-serve at cloud.ouraring.com. Unapproved apps can connect up to 10 Oura users, so a single-user course project does not need Oura's review.
+- **App registration:** Self-serve at developer.ouraring.com (values in `docs/oura-app-registration.md`). Unapproved apps can connect up to 10 Oura users, so a single-user course project does not need Oura's review.
 - **Redirect URI:** A localhost callback (e.g., `http://localhost:8501/callback/`). Must match the registered URI exactly, including the trailing slash.
-- **Scopes:** Request only `daily`, `heartrate`, and possibly `tag`. Do not request `email` or `personal`.
+- **Scopes:** Request only `daily`. Add the smallest extra scope only if average HRV turns out to need it. Never `email` or `personal`.
 - **Requirement:** Active Oura membership, or API calls may be denied.
-- **AI:** Claude API for question generation and tag extraction
+- **AI:** Claude API for tag extraction and follow-up questions, from journal text only. The Oura API and MCP Agreement (effective June 8, 2026), Sec. 4(d), forbids providing Oura API data to any AI model.
 - **Storage:** SQLite, local only
 - **Interface:** Streamlit or a simple web app
 - **Build tools:** [TBD]
@@ -79,15 +79,15 @@ Patterns handles two sensitive data types: biometric data from Oura and personal
 
 | Area | Practice |
 |---|---|
-| Data minimization | Send Claude only daily summary values (e.g., sleep score, readiness, average HRV), not raw heart rate time series. No name, email, or account IDs in prompts. |
-| Third-party disclosure | Journal text must go to Claude to generate questions and tags. Anthropic does not train on API data without permission and deletes API inputs and outputs within 30 days, unless flagged for a usage policy violation. The app states this on first launch. |
+| Data minimization | Never send Oura data, or anything derived from it, to Claude or any AI model (Oura API and MCP Agreement Sec. 4(d)). Claude receives only journal answer text, with no name, email, or account IDs. |
+| Third-party disclosure | Journal text goes to Claude to suggest tags and follow-up questions. Anthropic does not train on API data without permission and deletes API inputs and outputs within 30 days, unless flagged for a usage policy violation. The app states this on first launch. |
 | Storage | SQLite database stored locally, protected by device encryption (FileVault). Optional: database-level encryption. |
 | Secrets | Oura client secret and Claude API key stored in a `.env` file listed in `.gitignore`. Oura access and refresh tokens stored locally, never logged or committed. |
 | Logging | Application logs record errors and timestamps only, never journal text or health values. |
 | Repository hygiene | The database, `.env`, and any exports are excluded from Git. No real personal data in the repo. |
 | Demos and screenshots | Class demos use a synthetic dataset, not real Oura data or journal entries. |
 | Retention and deletion | The user can delete individual entries or all data (FR-11). Revoking the Oura connection removes stored tokens. |
-| Policies | A short `PRIVACY.md` and `TERMS.md` in the repo, linked in the Oura app registration, describing the above. |
+| Policies | `docs/legal/privacy-policy.md` and `docs/legal/terms-of-service.md`, linked in the Oura app registration, describing the above. |
 
 ## 11. Success Metrics
 - **Consistency:** Entries logged on at least 80% of nights over a 30-day test.
@@ -96,7 +96,7 @@ Patterns handles two sensitive data types: biometric data from Oura and personal
 - **Insight:** At least one correlation surfaces that the user did not already suspect.
 
 ## 12. Biggest Unknowns
-1. **Filtering:** How much Oura data and past journal history should be sent to Claude each night? Too little and the questions are generic; too much and they lose focus, cost more, and expose more personal data.
+1. **Filtering:** How much past journal history should be sent to Claude each night? Too little and the follow-ups are generic; too much and they lose focus, cost more, and expose more personal text. (Oura data is never sent; see 10.2.)
 2. **Question value:** Do Claude's questions actually help identify correlations, or do they just add friction compared to fixed tags?
 
 **Proposed test:** Run two weeks with fixed questions and two weeks with contextual questions, then compare completion rate, session length, and how useful the tags are.

@@ -26,6 +26,18 @@ Decisions: entries live in a Supabase `entries` table. Tags are typed by Ava (co
 - Update: fix a wrong tag or edit an answer on a saved entry. Issue #5, done, see `docs/xchangelog.md`.
 - Delete: remove one entry made by mistake. Issue #6, done, see `docs/xchangelog.md`.
 
+## v0.3.0
+
+### US03 Connect Oura: sign in and fetch daily summaries
+As Ava, I want to connect my Oura account once and have Patterns pull my daily sleep score, readiness, and average HRV, so my entries can later be linked to real scores instead of sample data. Source: PRD FR-1. Registration values: `docs/oura-app-registration.md`.
+
+Decisions (2026-11-03): Oura data is never sent to Claude or any AI model (Oura API and MCP Agreement Sec. 4(d)); PRD v1.2, architecture, and CLAUDE.md updated to match. Oura's MCP Server was ruled out (no public Oura server found, and MCP data can't be stored). Scope `daily` only. Until Oura approves the app, the Oura client ID and secret are blank placeholders: the app shows "Waiting for Oura app approval" and keeps using the synthetic sample nights, and all tests mock Oura. Checks that need the real API are marked "after approval".
+
+- Connect: OAuth sign-in (PKCE, state), callback at `/callback/`, tokens stored in Supabase, disconnect and revoke. Issue #7, see `docs/todo.md`.
+- Fetch: pull daily sleep score, readiness, and average HRV for a date range into a `nights` table, refreshing tokens as needed. Issue #8, see `docs/todo.md`.
+- Show: the Tonight tab shows stored Oura nights when connected and sample nights otherwise, labeled, with the night count. Issue #9, see `docs/todo.md`.
+- Verify: after Oura approves the app, run the real connect, fetch, show, refresh, and disconnect checks; confirm average HRV works with `daily`; add the Streamlit Cloud redirect URI. Issue #10, see `docs/todo.md`.
+
 ## Unscheduled
 
 ### Question generation: don't ask about screen use
@@ -45,9 +57,6 @@ Found testing US02 Update. Ava can add tags that aren't in her answers, which is
 
 ### Delete a range of entries (e.g. a week)
 Found testing US02 Delete. #6 deletes one entry at a time; there is no bulk delete. FR-11 asks for single-entry and delete-all only. If a range delete is wanted, it needs its own confirm step. Trends and correlations must be computed from whatever entries remain and the "based on N nights" count must drop to match; deleted nights show as gaps, never filled in.
-
-### Decision: keep Oura data away from Claude
-Found researching Oura app registration (2026-11-03). The Oura API and MCP Agreement (effective June 8, 2026), Sec. 4(d), forbids using the Oura API to "prompt, or otherwise provide input or data to any AI Model." LLM use of Oura data is only allowed through Oura's MCP Server. This contradicts `docs/03-architecture.md` step 4 (summary scores sent to Claude), PRD FR-2 ("using that day's data"), and the CLAUDE.md privacy rule that allows sending Claude daily summary values. Proposed: Claude sees only journal answer text (questions and tags); scores are compared in plain Python; any score-aware question is picked by app code from a fixed set, not written by Claude. Needs Ava's decision, then updates to the PRD, architecture, and CLAUDE.md. The registration documents (`docs/oura-app-registration.md`, `docs/legal/`) already assume this.
 
 ### Journal answers that mention Oura scores
 Found with the decision above. If Ava types her readiness or sleep score into an answer, that text would reach Claude. When tag extraction (FR-4) is built, decide whether to strip numbers that look like scores before sending, or just note it in the privacy policy.
