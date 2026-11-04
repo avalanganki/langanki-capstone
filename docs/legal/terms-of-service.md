@@ -34,6 +34,6 @@ Any change to these terms will be posted on this page with a new effective date.
 
 ## Contact
 
-[CONTACT EMAIL]
+ava@langanki.com
 
 Source code: https://github.com/avalanganki/langanki-capstone
