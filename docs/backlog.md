@@ -33,9 +33,9 @@ As Ava, I want to connect my Oura account once and have Patterns pull my daily s
 
 Decisions (2026-11-03): Oura data is never sent to Claude or any AI model (Oura API and MCP Agreement Sec. 4(d)); PRD v1.2, architecture, and CLAUDE.md updated to match. Oura's MCP Server was ruled out (no public Oura server found, and MCP data can't be stored). Scope `daily` only. Until Oura approves the app, the Oura client ID and secret are blank placeholders: the app shows "Waiting for Oura app approval" and keeps using the synthetic sample nights, and all tests mock Oura. Checks that need the real API are marked "after approval".
 
-- Connect: OAuth sign-in (PKCE, state), callback at `/callback/`, tokens stored in Supabase, disconnect and revoke. Issue #7, see `docs/todo.md`.
-- Fetch: pull daily sleep score, readiness, and average HRV for a date range into a `nights` table, refreshing tokens as needed. Issue #8, see `docs/todo.md`.
-- Show: the Tonight tab shows stored Oura nights when connected and sample nights otherwise, labeled, with the night count. Issue #9, see `docs/todo.md`.
+- Connect: OAuth sign-in (PKCE, state), callback at `/callback/`, tokens stored in Supabase, disconnect and revoke. Issue #7, done, see `docs/xchangelog.md`.
+- Fetch: pull daily sleep score, readiness, and average HRV for a date range into a `nights` table, refreshing tokens as needed. Issue #8, done, see `docs/xchangelog.md`.
+- Show: the Tonight tab shows stored Oura nights when connected and sample nights otherwise, labeled, with the night count. Issue #9, done, see `docs/xchangelog.md`.
 - Verify: after Oura approves the app, run the real connect, fetch, show, refresh, and disconnect checks; confirm average HRV works with `daily`; add the Streamlit Cloud redirect URI. Issue #10, see `docs/todo.md`.
 
 ## Unscheduled

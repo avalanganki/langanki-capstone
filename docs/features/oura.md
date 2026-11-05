@@ -83,3 +83,32 @@ Done by Ava on 2026-11-05: `0004_nights.sql` applied in Supabase; the empty `nig
 ### Check 4: not connected
 
 Covered by `test_not_configured_has_no_refresh_button` and `test_oura_not_conDone by Ava on 2026-11-05: the connected sidebar shows "Refresh Oura data" and "Disconnect" (screenshot kept out of the repo, no real values shown). The not-configured state is covered by the tests above.ted state with no Refresh button.
+
+## Show (issue #9)
+
+Runs on 2026-11-05, Python 3.9.6. All rows in tests are synthetic (dates in 2000, made-up values). No real Oura values are recorded here.
+
+Decided while building:
+- Table values are shown as text so a missing value reads "No data". A numeric column would show it blank. A real 0 still shows as 0.
+- HRV shows whole numbers without ".0" and anything else to one decimal.
+- If you're connected but nothing has been fetched yet, Tonight shows the sample nights with the sample label.
+
+### Check 1 (AC1): sample nights when not connected
+
+Covered by `test_not_connected_gives_sample`, `test_connected_without_rows_gives_sample`, and `test_tonight_sample_label_when_not_connected`.
+
+Done by Ava on 2026-11-05: Tonight while not connected shows the sample nights labeled "Sample data. Not real Oura data." (screenshot kept out of the repo).
+
+### Check 2 (AC2 to AC4): Oura nights, "No data", night count
+
+- `test_connected_with_rows_gives_newest_14_oldest_first`: 20 synthetic nights stored, the newest 14 shown oldest first.
+- `test_tonight_shows_oura_nights_when_connected` (app): "From your Oura ring." label, dates oldest first, missing readiness and HRV shown as "No data", "Based on 3 nights."
+- `test_show_value_never_zero_for_missing`, `test_has_values`: the count includes only nights with at least one value.
+
+The real-data view is checked in #10, described in words only.
+
+### Check 3 (AC5): tests
+
+`pytest`: 84 passed (7 new). Oura and Supabase are never touched: tests use the in-memory fake client.
+
+`streamlit run app.py` is running, `/_stcore/health` returns `ok`, and the server log has no errors.

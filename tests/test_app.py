@@ -536,3 +536,35 @@ def test_refresh_on_403_shows_membership_message_and_saves_nothing(oura_settings
 def test_not_configured_has_no_refresh_button(fake):
     at = run_app()
     assert not [b for b in at.button if b.key == "oura_refresh"]
+
+
+# --- Show Oura nights on Tonight (issue #9). Synthetic rows only. ---
+
+SYNTHETIC_NIGHTS = [
+    {"night_date": "2000-01-02", "sleep_score": 74, "readiness": None, "avg_hrv": 47.0, "fetched_at": "2000-01-06T08:00:00+00:00"},
+    {"night_date": "2000-01-01", "sleep_score": 81, "readiness": 79, "avg_hrv": 52.5, "fetched_at": "2000-01-06T08:00:00+00:00"},
+    {"night_date": "2000-01-03", "sleep_score": 68, "readiness": 62, "avg_hrv": None, "fetched_at": "2000-01-06T08:00:00+00:00"},
+]
+
+
+def test_tonight_sample_label_when_not_connected(fake):
+    at = run_app()
+    captions = [c.value for c in at.caption]
+    assert "Sample data. Not real Oura data." in captions
+    assert "From your Oura ring." not in captions
+
+
+def test_tonight_shows_oura_nights_when_connected(oura_settings):
+    client = connected(oura_settings)
+    client.tables["nights"] = [dict(r) for r in SYNTHETIC_NIGHTS]
+    with patch("db.get_client", return_value=client):
+        at = run_app()
+    assert not at.exception
+    captions = [c.value for c in at.caption]
+    assert "From your Oura ring." in captions
+    assert "Sample data. Not real Oura data." not in captions
+    table = at.dataframe[0].value
+    assert list(table["Date"]) == ["2000-01-01", "2000-01-02", "2000-01-03"]
+    assert list(table["Readiness"]) == ["79", "No data", "62"]  # missing is "No data", not 0
+    assert list(table["HRV (ms)"]) == ["52.5", "47", "No data"]
+    assert "Based on 3 nights." in captions
