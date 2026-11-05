@@ -119,3 +119,6 @@ Found planning US05. "Refresh Oura data" pulls the last 14 days, so entries from
 
 ### Draft a request to Oura about AI use of score data
 Found 2026-11-05 (Ava asked whether Claude could see scores). Sec. 4(d) of the Oura API agreement forbids giving Oura API data to AI models, including typed-in copies within this app. If Claude wording of insights is ever wanted, email Oura's API team for written permission first. Also save the exact Sec. 4(d) text in `docs/research/` so the rule rests on its actual wording. No change to the rule until Oura answers in writing.
+
+### API logs must not record query strings
+Found building #17. uvicorn's access log writes each request's full path, including the query string. When the Oura callback moves to the API (`/callback/?code=...&state=...`), the authorization code would land in the log. Before that route ships, turn off uvicorn's access log or log only method, path without query, and status. CLAUDE.md: logs hold errors and timestamps only.
