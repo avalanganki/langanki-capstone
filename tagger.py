@@ -6,14 +6,12 @@ score-aware question lead-ins, or Ava's name, email, or account IDs.
 Never log answers, tags, or Claude's response.
 """
 
-import os
-from pathlib import Path
 from typing import List
 
 import anthropic
-from dotenv import load_dotenv
 from pydantic import BaseModel, ValidationError
 
+import config
 from entries import QUESTIONS
 
 MODEL = "claude-opus-5-5"
@@ -23,8 +21,6 @@ TIMEOUT = 30  # seconds
 FALLBACK_BETA = "server-side-fallback-2026-07-01"
 MAX_TAG_CHARS = 30
 MAX_TAG_WORDS = 3
-
-ENV_PATH = Path(__file__).parent / ".env"
 
 FAILED = "Couldn't suggest tags right now. Type them instead."
 
@@ -57,16 +53,7 @@ class TagList(BaseModel):
 
 
 def get_api_key():
-    load_dotenv(ENV_PATH)
-    key = (os.environ.get("ANTHROPIC_API_KEY") or "").strip()
-    if not key:
-        try:
-            import streamlit as st
-
-            key = str(st.secrets.get("ANTHROPIC_API_KEY", "")).strip()
-        except Exception:
-            pass  # no secrets file: stay unconfigured
-    return key
+    return config.get("ANTHROPIC_API_KEY")
 
 
 def is_configured():

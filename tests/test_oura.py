@@ -160,7 +160,6 @@ def test_is_configured_needs_id_and_secret():
 
 
 def test_get_settings_reads_environment(monkeypatch):
-    monkeypatch.setattr(oura, "load_dotenv", lambda *a, **k: None)
     monkeypatch.setenv("OURA_CLIENT_ID", " id ")
     monkeypatch.setenv("OURA_CLIENT_SECRET", "secret")
     monkeypatch.delenv("OURA_REDIRECT_URI", raising=False)

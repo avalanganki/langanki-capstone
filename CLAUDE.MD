@@ -8,7 +8,7 @@ Patterns: a nightly reflection app for Oura ring users. The app asks short, cont
 - Multi-user and other wearables are out of scope.
 
 ## Stack
-Python, Streamlit, Supabase (database and login), Oura API v2, Claude API. Deployed on Streamlit Community Cloud. This replaces local SQLite from PRD v1.1.
+Python FastAPI backend, React + TypeScript (Vite) frontend, Supabase (database and login), Oura API v2, Claude API. The API holds every secret; the browser never does. Decided Nov 5, 2026 (`docs/decisions/frontend_decision.md`), replacing Streamlit. Streamlit (`app.py`, Streamlit Community Cloud) keeps running until the new UI matches it, then is removed. Supabase replaced local SQLite from PRD v1.1.
 
 ## Conventions
 - Requirements live in /docs (concept brief, PRD, architecture). If a request contradicts them, say so. Don't guess.

@@ -7,15 +7,14 @@ Oura data must never be sent to Claude or any AI model (Oura API agreement Sec. 
 import base64
 import datetime
 import hashlib
-import os
 import re
 import secrets
 import time
-from pathlib import Path
 from urllib.parse import urlencode
 
 import requests
-from dotenv import load_dotenv
+
+import config
 
 AUTHORIZE_URL = "https://cloud.ouraring.com/oauth/authorize"
 TOKEN_URL = "https://api.ouraring.com/oauth/token"
@@ -26,7 +25,6 @@ USER_AGENT = "Patterns/0.3 (capstone project)"
 STATE_MAX_AGE = 10 * 60  # seconds
 TIMEOUT = 15  # seconds per Oura request
 
-ENV_PATH = Path(__file__).parent / ".env"
 TABLE = "oura_connection"
 NIGHTS_TABLE = "nights"
 REFRESH_MARGIN = datetime.timedelta(minutes=5)
@@ -63,20 +61,10 @@ class OuraNotConnected(OuraError):
 
 
 def get_settings():
-    load_dotenv(ENV_PATH)
-    names = ("OURA_CLIENT_ID", "OURA_CLIENT_SECRET", "OURA_REDIRECT_URI")
-    values = {n: (os.environ.get(n) or "").strip() for n in names}
-    if not (values["OURA_CLIENT_ID"] and values["OURA_CLIENT_SECRET"]):
-        try:
-            import streamlit as st
-
-            values = {n: str(st.secrets.get(n, values[n])).strip() for n in names}
-        except Exception:
-            pass  # no secrets file: stay unconfigured
     return {
-        "client_id": values["OURA_CLIENT_ID"],
-        "client_secret": values["OURA_CLIENT_SECRET"],
-        "redirect_uri": values["OURA_REDIRECT_URI"] or "http://localhost:8501/callback/",
+        "client_id": config.get("OURA_CLIENT_ID"),
+        "client_secret": config.get("OURA_CLIENT_SECRET"),
+        "redirect_uri": config.get("OURA_REDIRECT_URI") or "http://localhost:8501/callback/",
     }
 
 
