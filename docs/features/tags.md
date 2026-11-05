@@ -67,7 +67,7 @@ Decided while building:
 
 ### Check 1: `0005_entry_suggested_tags.sql` applied
 
-Pending: Ava runs `supabase/migrations/0005_entry_suggested_tags.sql` in the Supabase SQL editor and shows the new `suggested_tags` column (not row contents). This must happen before saving from the running app: until then, Save fails because the column doesn't exist.
+Done by Ava on 2026-11-05: `0005_entry_suggested_tags.sql` applied in Supabase, and `entries` now has the `suggested_tags` column.
 
 ### Check 2 (AC1 to AC5): tests
 
@@ -89,4 +89,4 @@ Pending: Ava runs `supabase/migrations/0005_entry_suggested_tags.sql` in the Sup
 
 ### Check 3: running app
 
-Pending: with synthetic answers, Ava clicks Suggest, removes one tag, types one, and saves. She screenshots Past entries showing "(suggested)" only on Claude's tags. Optionally, she edits an older entry, clicks Suggest, then "Save changes".
+Done by Ava on 2026-11-05 with synthetic answers: Suggest, remove one tag, type one, and save. Past entries shows "(suggested)" only on Claude's tags. Screenshot kept out of the repo.

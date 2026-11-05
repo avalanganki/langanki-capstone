@@ -23,3 +23,4 @@ Completed items moved from `docs/todo.md`.
 ## v0.4.0
 
 - [x] #11 US04 Suggest: Claude suggests tags from all answers, reusing known tags. Merged 2026-11-05. Evidence: `docs/features/tags.md`
+- [x] #12 US04 Source: remember suggested vs typed tags; suggest on edit. Merged 2026-11-05. Evidence: `docs/features/tags.md`
