@@ -37,5 +37,5 @@ With the real `.env`, a one-off check printed only presence: all six settings pr
 ### Check 3 (AC1, AC2): click-through
 
 Pending:
-- Locally: Ava refreshes http://localhost:8501 (now on `dev/16-config`) and checks that entries, Oura refresh, and Suggest tags still work.
+- Locally: done by Ava on 2026-11-05. On http://localhost:8501 (`dev/16-config`), past entries, Oura Refresh, and Suggest tags all work as before.
 - Live: Streamlit Community Cloud deploys `main`, so the live check runs right after merging. If it breaks, the merge is reverted.
