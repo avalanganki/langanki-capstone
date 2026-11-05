@@ -1,8 +1,10 @@
 import datetime
 
+import requests
 import streamlit as st
 
 import db
+import oura
 from entries import (
     QUESTIONS,
     DuplicateEntryError,
@@ -16,6 +18,47 @@ from entries import (
 from sample_data import load_nights
 
 st.title("Patterns")
+
+
+def handle_oura_callback():
+    # Oura sends the browser back to /callback/?code=...&state=... (or ?error=...).
+    params = st.query_params
+    if "error" in params:
+        st.query_params.clear()
+        st.warning("Oura connection was cancelled.")
+    elif "code" in params and "state" in params:
+        code, state = params["code"], params["state"]
+        st.query_params.clear()  # don't leave the code in the address bar
+        try:
+            tokens = oura.finish_sign_in(state, code)
+        except oura.OuraAuthError:
+            st.warning("Sign-in expired or didn't match. Try Connect again.")
+        except requests.RequestException:
+            st.warning("Couldn't reach Oura. Try Connect again.")
+        else:
+            oura.save_connection(db.get_client(), tokens)
+            st.success("Connected to Oura.")
+
+
+def disconnect_oura():
+    oura.disconnect(db.get_client())
+    st.session_state.oura_flash = "Disconnected from Oura."
+
+
+handle_oura_callback()
+
+with st.sidebar:
+    st.subheader("Oura")
+    if "oura_flash" in st.session_state:
+        st.success(st.session_state.pop("oura_flash"))
+    oura_settings = oura.get_settings()
+    if not oura.is_configured(oura_settings):
+        st.info("Waiting for Oura app approval. Showing sample data.")
+    elif oura.load_connection(db.get_client()):
+        st.write("Connected to Oura.")
+        st.button("Disconnect", key="oura_disconnect", on_click=disconnect_oura)
+    else:
+        st.link_button("Connect Oura", oura.start_sign_in(oura_settings))
 
 tonight, past = st.tabs(["Tonight", "Past entries"])
 
