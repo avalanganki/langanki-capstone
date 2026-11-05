@@ -608,7 +608,7 @@ def test_suggest_fills_tags_and_does_not_save(fake, claude_off):
         at.text_area[1].input("around 3")
         at = suggest_button(at).click().run(timeout=30)
     assert not at.exception
-    assert at.text_input(key="tags_text").value == "low energy, late caffeine"
+    assert at.text_input(key="tonight_tags").value == "low energy, late caffeine"
     assert fake.rows == []  # nothing saved
     pairs, known = suggest.call_args.args
     assert pairs[0] == (QS[0], "Felt drained") and pairs[1] == (QS[1], "around 3")
@@ -620,9 +620,9 @@ def test_suggest_merges_after_typed_tags(fake, claude_off):
     with patch("tagger.suggest_tags", return_value=[("stress", False), ("low energy", False)]):
         at = run_app()
         at.text_area[0].input("Rough day")
-        at.text_input(key="tags_text").input("Stress, deadline")
+        at.text_input(key="tonight_tags").input("Stress, deadline")
         at = suggest_button(at).click().run(timeout=30)
-    assert at.text_input(key="tags_text").value == "stress, deadline, low energy"
+    assert at.text_input(key="tonight_tags").value == "stress, deadline, low energy"
 
 
 def test_new_tags_caption_only_for_new(fake, claude_off):
@@ -645,11 +645,11 @@ def test_suggest_error_shows_message_and_keeps_typed_tags(fake, claude_off):
     with patch("tagger.suggest_tags", side_effect=tagger.TaggerError(tagger.FAILED)):
         at = run_app()
         at.text_area[0].input("Tired")
-        at.text_input(key="tags_text").input("stress")
+        at.text_input(key="tonight_tags").input("stress")
         at = suggest_button(at).click().run(timeout=30)
     assert not at.exception
     assert "Couldn't suggest tags right now. Type them instead." in [w.value for w in at.warning]
-    assert at.text_input(key="tags_text").value == "stress"
+    assert at.text_input(key="tonight_tags").value == "stress"
 
 
 def test_save_after_suggest_stores_tags(fake, claude_off):
@@ -661,3 +661,108 @@ def test_save_after_suggest_stores_tags(fake, claude_off):
         at = at.button[0].click().run(timeout=30)
     assert len(fake.rows) == 1
     assert fake.rows[0]["tags"] == ["low energy"]
+
+
+# --- Tag source (issue #12). Claude is always mocked. ---
+
+QA = [{"question": q, "answer": a} for q, a in zip(QS, ("Drained", "around 3", "Read"))]
+
+
+def test_save_after_suggest_stores_suggested_tags(fake, claude_off):
+    tags_on(claude_off)
+    with patch("tagger.suggest_tags", return_value=[("low energy", False), ("late caffeine", False)]):
+        at = run_app()
+        at.text_area[0].input("Drained")
+        at = suggest_button(at).click().run(timeout=30)
+        # Remove one suggestion and type one of my own before saving.
+        at.text_input(key="tonight_tags").input("low energy, deadline")
+        at = at.button[0].click().run(timeout=30)
+    row = fake.rows[0]
+    assert row["tags"] == ["low energy", "deadline"]
+    assert row["suggested_tags"] == ["low energy", "late caffeine"]
+
+
+def test_save_without_suggest_stores_no_suggestions(fake):
+    at = save(run_app(), tags="stress")
+    assert fake.rows[0]["suggested_tags"] == []
+
+
+def entry_row(tags, suggested=None, date="2026-01-05"):
+    row = {"entry_date": date, "answers": [dict(a) for a in QA], "tags": tags}
+    if suggested is not None:
+        row["suggested_tags"] = suggested
+    return row
+
+
+def test_past_entries_marks_only_suggested_tags():
+    client = FakeClient(rows=[entry_row(["low energy", "deadline"], ["low energy", "late caffeine"])])
+    with patch("db.get_client", return_value=client):
+        at = run_app()
+    assert "Tags: low energy (suggested), deadline" in [m.value for m in at.markdown]
+
+
+def test_old_entry_shows_tags_as_before():
+    client = FakeClient(rows=[entry_row(["stress", "nap"])])
+    with patch("db.get_client", return_value=client):
+        at = run_app()
+    assert "Tags: stress, nap" in [m.value for m in at.markdown]
+
+
+def test_suggest_in_edit_saves_only_on_save_changes(claude_off):
+    tags_on(claude_off)
+    client = FakeClient(rows=[entry_row(["stress"])])
+    with patch("db.get_client", return_value=client), patch(
+        "tagger.suggest_tags", return_value=[("low energy", False), ("sauna", True)]
+    ) as suggest:
+        at = run_app()
+        at = at.button(key="edit").click().run(timeout=30)
+        assert at.text_input(key="edit_tags").value == "stress"
+        at = at.button(key="edit_suggest").click().run(timeout=30)
+        assert not at.exception
+        assert at.text_input(key="edit_tags").value == "stress, low energy, sauna"
+        assert "New tags: sauna. Swap in an existing tag if one fits." in [c.value for c in at.caption]
+        assert client.rows[0]["tags"] == ["stress"]  # not saved yet
+        pairs, _ = suggest.call_args.args
+        assert pairs == [(a["question"], a["answer"]) for a in QA]
+        at = at.button(key="save_changes").click().run(timeout=30)
+    row = client.rows[0]
+    assert row["tags"] == ["stress", "low energy", "sauna"]
+    assert row["suggested_tags"] == ["low energy", "sauna"]
+    assert "Tags: stress, low energy (suggested), sauna (suggested)" in [m.value for m in at.markdown]
+
+
+def test_cancel_after_suggest_in_edit_changes_nothing(claude_off):
+    tags_on(claude_off)
+    client = FakeClient(rows=[entry_row(["stress"])])
+    with patch("db.get_client", return_value=client), patch(
+        "tagger.suggest_tags", return_value=[("low energy", False)]
+    ):
+        at = run_app()
+        at = at.button(key="edit").click().run(timeout=30)
+        at = at.button(key="edit_suggest").click().run(timeout=30)
+        at = at.button(key="cancel_edit").click().run(timeout=30)
+    assert client.rows[0]["tags"] == ["stress"]
+    assert "suggested_tags" not in client.rows[0]
+
+
+def test_removed_tag_stays_removed_on_later_edit(claude_off):
+    tags_on(claude_off)
+    client = FakeClient(rows=[entry_row(["deadline"], ["low energy", "deadline"])])
+    with patch("db.get_client", return_value=client), patch("tagger.suggest_tags") as suggest:
+        at = run_app()
+        at = at.button(key="edit").click().run(timeout=30)
+        at.text_area(key="edit_answer_0").input("Drained, edited")
+        at = at.button(key="save_changes").click().run(timeout=30)
+    suggest.assert_not_called()  # editing never re-runs suggestions on its own
+    row = client.rows[0]
+    assert row["tags"] == ["deadline"]
+    assert row["suggested_tags"] == ["low energy", "deadline"]  # kept as stored
+
+
+def test_edit_suggest_disabled_when_not_configured():
+    client = FakeClient(rows=[entry_row(["stress"])])
+    with patch("db.get_client", return_value=client):
+        at = run_app()
+        at = at.button(key="edit").click().run(timeout=30)
+    assert at.button(key="edit_suggest").disabled
+    assert "Tag suggestions are off (no Claude API key)." in [c.value for c in at.caption]

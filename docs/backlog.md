@@ -46,7 +46,7 @@ As Ava, I want Patterns to suggest tags from my written answers, which I check b
 Decisions (2026-11-05): Ava chose tags before score-aware questions (FR-2). Claude suggests and Ava saves, per the privacy policy ("may be sent to ... suggest tags"). Tags are open, not a fixed list. Ava's idea: Claude gets the known tags (a seed list plus every tag already saved) and must reuse one whenever the meaning matches ("drained" means `low energy`). It creates a new 1 to 3 word tag only when nothing fits, and new tags are flagged so Ava can swap in an existing one. Tags come from every prompt, including energy and wind-down. Claude gets each answer with its neutral question, because "around 3" means nothing without the question, plus the known-tag list. It never gets score-aware lead-ins, Oura data, name, email, or IDs. "Not mentioned" is never tagged as "none" (from the backlog item "Off-topic answers"). Model `claude-opus-5-5` at low effort, in one constant. A privacy line under the form covers PRD 10.2's disclosure.
 
 - Suggest: "Suggest tags" button on Tonight. Claude reuses known tags, new tags are flagged, the output is structured, a privacy caption sits under the form, and errors fall back to typing. Issue #11, done, see `docs/xchangelog.md`.
-- Source: store which tags Claude suggested vs. Ava typed, mark them in Past entries, and Suggest on edit. Issue #12, see `docs/todo.md`.
+- Source: store which tags Claude suggested vs. Ava typed, mark them in Past entries, and Suggest on edit. Issue #12, done, see `docs/xchangelog.md`.
 - Verify: 12 synthetic nights against real Claude, including variant merging and a question-dependent answer (at least 10 match), cost under one cent a night, and the Streamlit Cloud secret. Issue #13, see `docs/todo.md`.
 
 ## Unscheduled
@@ -64,7 +64,7 @@ Found testing US02 Create (answering the caffeine question with only food). The 
 Found testing US02 Read. If the ring wasn't worn, Oura has no sleep score for that night. When Oura linking (FR-5) is built, the entry should still open and show "No ring data for this night" instead of blanks or zeros, and that night is left out of any correlation (and out of its night count).
 
 ### Tag source: typed vs found in answers
-Scheduled as US04 Source, issue #12. Found testing US02 Update. Ava can add tags that aren't in her answers, which is allowed (she knows things she didn't write). Once Claude extracts tags (FR-4), record whether each tag was typed by Ava or found by Claude, so an edit never gets silently overwritten by re-extraction.
+Done in US04 Source, issue #12 (see `docs/xchangelog.md`). Found testing US02 Update. Ava can add tags that aren't in her answers, which is allowed (she knows things she didn't write). Once Claude extracts tags (FR-4), record whether each tag was typed by Ava or found by Claude, so an edit never gets silently overwritten by re-extraction.
 
 ### Delete a range of entries (e.g. a week)
 Found testing US02 Delete. #6 deletes one entry at a time; there is no bulk delete. FR-11 asks for single-entry and delete-all only. If a range delete is wanted, it needs its own confirm step. Trends and correlations must be computed from whatever entries remain and the "based on N nights" count must drop to match; deleted nights show as gaps, never filled in.
