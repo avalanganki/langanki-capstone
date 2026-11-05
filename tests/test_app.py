@@ -766,3 +766,56 @@ def test_edit_suggest_disabled_when_not_configured():
         at = at.button(key="edit").click().run(timeout=30)
     assert at.button(key="edit_suggest").disabled
     assert "Tag suggestions are off (no Claude API key)." in [c.value for c in at.caption]
+
+
+# --- Link entries to the next night (issue #14). Synthetic 2000-dated rows only. ---
+
+LINK_NIGHTS = [
+    {"night_date": "2000-01-02", "sleep_score": 81, "readiness": None, "avg_hrv": 52.0, "fetched_at": "2000-01-06T08:00:00+00:00"},
+    {"night_date": "2000-01-05", "sleep_score": 74, "readiness": 70, "avg_hrv": 47.5, "fetched_at": "2000-01-06T08:00:00+00:00"},
+]
+
+
+def linked_client(entry_date, connected=True):
+    client = FakeClient(rows=[entry_row(["stress"], date=entry_date)], connection=dict(FAR_FUTURE) if connected else None)
+    client.tables["nights"] = [dict(n) for n in LINK_NIGHTS]
+    return client
+
+
+def past_lines(client, oura_settings):
+    oura_settings.return_value = dict(FAKE_OURA)
+    with patch("db.get_client", return_value=client), patch("tagger.suggest_tags") as suggest:
+        at = run_app()
+    assert not at.exception
+    suggest.assert_not_called()  # viewing entries never calls Claude
+    return [m.value for m in at.markdown]
+
+
+def test_linked_entry_shows_next_night_with_no_data(oura_settings):
+    lines = past_lines(linked_client("2000-01-01"), oura_settings)
+    assert "Next night (Jan 2): Sleep score 81 · Readiness No data · HRV 52 ms" in lines
+
+
+def test_entry_in_range_without_night_shows_no_ring_data(oura_settings):
+    lines = past_lines(linked_client("2000-01-02"), oura_settings)
+    assert "No ring data for this night." in lines
+
+
+def test_entry_after_newest_night_shows_not_fetched(oura_settings):
+    lines = past_lines(linked_client("2000-01-05"), oura_settings)
+    assert "Not fetched from Oura yet. Use Refresh Oura data." in lines
+
+
+def test_not_connected_shows_connect_message_and_no_scores(oura_settings):
+    lines = past_lines(linked_client("2000-01-01", connected=False), oura_settings)
+    assert "Connect Oura to see the next night's scores." in lines
+    assert not any(l.startswith("Next night") for l in lines)
+
+
+def test_link_follows_edits_and_refresh(oura_settings):
+    # Linking is by date each time: new nights show up on the next view without re-saving the entry.
+    client = linked_client("2000-01-02")
+    assert "No ring data for this night." in past_lines(client, oura_settings)
+    client.tables["nights"].append({"night_date": "2000-01-03", "sleep_score": 66, "readiness": 61, "avg_hrv": None, "fetched_at": "2000-01-07T08:00:00+00:00"})
+    lines = past_lines(client, oura_settings)
+    assert "Next night (Jan 3): Sleep score 66 · Readiness 61 · HRV No data" in lines
