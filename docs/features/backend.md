@@ -38,4 +38,4 @@ With the real `.env`, a one-off check printed only presence: all six settings pr
 
 Pending:
 - Locally: done by Ava on 2026-11-05. On http://localhost:8501 (`dev/16-config`), past entries, Oura Refresh, and Suggest tags all work as before.
-- Live: Streamlit Community Cloud deploys `main`, so the live check runs right after merging. If it breaks, the merge is reverted.
+- Live: dropped on 2026-11-05 by Ava's decision. The Streamlit app won't be the live version of Patterns; the live URL will be the Render deploy of the new UI (US06). AC2 no longer applies.

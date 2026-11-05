@@ -14,7 +14,7 @@ Date: 2026-11-05. Decided by Ava. Supersedes the interface part of `stack_decisi
 - **Login:** Supabase Auth. The browser signs in with Supabase and sends the user's access token to the API. The API checks it and allows only Ava's account (single user this semester).
 - **Hosting:** one web service that runs FastAPI and also serves the built frontend, so there is one URL. Render's free tier, confirmed by Ava on 2026-11-05. It sleeps when idle, like Streamlit Community Cloud.
 - **Oura redirect URI:** the callback moves to the API, at `http://localhost:8000/callback/` locally and `https://<app>/callback/` live. Both must be added to the Oura app registration, exactly, with the trailing slash.
-- **Transition:** Streamlit keeps running until the new UI matches it (Tonight, Past entries, Oura connect and refresh, Suggest tags). Then `app.py` and the Streamlit dependency are removed in their own issue.
+- **Transition:** Streamlit keeps running locally only (no live Streamlit deploy, Ava 2026-11-05) until the new UI matches it (Tonight, Past entries, Oura connect and refresh, Suggest tags). Then `app.py` and the Streamlit dependency are removed in their own issue.
 
 **Rules that don't change:** Oura data, and anything derived from it, never goes to Claude. Claude sees only answers, the neutral questions, and the tag list. Nothing logs journal text or health values. Correlations are computed by app code and always show their night count. Never claim a cause.
 
