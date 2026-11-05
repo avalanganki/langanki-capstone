@@ -8,6 +8,5 @@ Items moved from `docs/backlog.md` that we are working on now.
 
 ## v0.4.0 US04 Claude tags
 
-- [ ] #11 Suggest: Claude suggests tags from all answers, reusing known tags
 - [ ] #12 Source: remember suggested vs typed tags; suggest on edit
 - [ ] #13 Verify: real Claude tag accuracy and cost

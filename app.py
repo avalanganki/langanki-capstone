@@ -5,6 +5,7 @@ import streamlit as st
 
 import db
 import oura
+import tagger
 from entries import (
     QUESTIONS,
     DuplicateEntryError,
@@ -77,13 +78,51 @@ with st.sidebar:
 
 tonight, past = st.tabs(["Tonight", "Past entries"])
 
+def suggest_tonight_tags():
+    # Only the fixed questions and typed answers go to Claude, never Oura data.
+    pairs = [(q, st.session_state.get(f"answer_{i}", "")) for i, q in enumerate(QUESTIONS)]
+    st.session_state.pop("new_tags", None)
+    try:
+        suggested = tagger.suggest_tags(pairs, tagger.known_tags(db.get_client()))
+    except tagger.TaggerError as err:
+        st.session_state.tag_error = str(err)
+        return
+    tags = parse_tags(st.session_state.get("tags_text", ""))
+    tags += [t for t, _ in suggested if t not in tags]
+    st.session_state.tags_text = ", ".join(tags)
+    new = [t for t, is_new in suggested if is_new]
+    if new:
+        st.session_state.new_tags = new
+
+
 with tonight:
+    tags_on = tagger.is_configured()
     # Enter in the Tags box would otherwise save a half-finished entry, and a date can't be saved twice.
     with st.form("entry", clear_on_submit=False, enter_to_submit=False):
         entry_date = st.date_input("Date", value=datetime.date.today())
-        answers = [{"question": q, "answer": st.text_area(q)} for q in QUESTIONS]
-        tags_text = st.text_input("Tags (comma-separated)")
+        answers = [
+            {"question": q, "answer": st.text_area(q, key=f"answer_{i}")}
+            for i, q in enumerate(QUESTIONS)
+        ]
+        tags_text = st.text_input("Tags (comma-separated)", key="tags_text")
         submitted = st.form_submit_button("Save")
+        st.form_submit_button(
+            "Suggest tags", key="suggest_tags", on_click=suggest_tonight_tags, disabled=not tags_on
+        )
+
+    if "tag_error" in st.session_state:
+        st.warning(st.session_state.pop("tag_error"))
+    if "new_tags" in st.session_state:
+        st.caption(
+            f"New tags: {', '.join(st.session_state.new_tags)}. Swap in an existing tag if one fits."
+        )
+    if tags_on:
+        st.caption(
+            "Suggest tags sends only your answers, the questions, and your tag list to Anthropic's "
+            "Claude API, never Oura data, your name, or email. Anthropic deletes API data within 30 days."
+        )
+    else:
+        st.caption("Tag suggestions are off (no Claude API key).")
 
     if submitted:
         try:

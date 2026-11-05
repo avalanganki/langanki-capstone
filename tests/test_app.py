@@ -117,6 +117,13 @@ FAKE_OURA = {
 
 
 @pytest.fixture(autouse=True)
+def claude_off():
+    # Never read the real Claude key in tests. Default: tag suggestions off.
+    with patch("tagger.is_configured", return_value=False) as configured:
+        yield configured
+
+
+@pytest.fixture(autouse=True)
 def oura_settings():
     # Never read the real .env in tests. Default: Oura not configured yet.
     with patch("oura.get_settings", return_value=dict(BLANK_OURA)) as settings:
@@ -568,3 +575,89 @@ def test_tonight_shows_oura_nights_when_connected(oura_settings):
     assert list(table["Readiness"]) == ["79", "No data", "62"]  # missing is "No data", not 0
     assert list(table["HRV (ms)"]) == ["52.5", "47", "No data"]
     assert "Based on 3 nights." in captions
+
+
+# --- Suggest tags (issue #11). Claude is always mocked. ---
+
+OFF_CAPTION = "Tag suggestions are off (no Claude API key)."
+PRIVACY = "Suggest tags sends only your answers, the questions, and your tag list"
+
+
+def suggest_button(at):
+    return at.button(key="suggest_tags")
+
+
+def test_suggest_disabled_when_not_configured(fake):
+    at = run_app()
+    assert not at.exception
+    assert suggest_button(at).disabled
+    assert OFF_CAPTION in [c.value for c in at.caption]
+
+
+def tags_on(claude_off):
+    claude_off.return_value = True
+
+
+def test_suggest_fills_tags_and_does_not_save(fake, claude_off):
+    tags_on(claude_off)
+    with patch("tagger.suggest_tags", return_value=[("low energy", False), ("late caffeine", False)]) as suggest:
+        at = run_app()
+        assert not suggest_button(at).disabled
+        assert any(c.value.startswith(PRIVACY) for c in at.caption)
+        at.text_area[0].input("Felt drained")
+        at.text_area[1].input("around 3")
+        at = suggest_button(at).click().run(timeout=30)
+    assert not at.exception
+    assert at.text_input(key="tags_text").value == "low energy, late caffeine"
+    assert fake.rows == []  # nothing saved
+    pairs, known = suggest.call_args.args
+    assert pairs[0] == (QS[0], "Felt drained") and pairs[1] == (QS[1], "around 3")
+    assert known[:2] == ["low energy", "high energy"]
+
+
+def test_suggest_merges_after_typed_tags(fake, claude_off):
+    tags_on(claude_off)
+    with patch("tagger.suggest_tags", return_value=[("stress", False), ("low energy", False)]):
+        at = run_app()
+        at.text_area[0].input("Rough day")
+        at.text_input(key="tags_text").input("Stress, deadline")
+        at = suggest_button(at).click().run(timeout=30)
+    assert at.text_input(key="tags_text").value == "stress, deadline, low energy"
+
+
+def test_new_tags_caption_only_for_new(fake, claude_off):
+    tags_on(claude_off)
+    with patch("tagger.suggest_tags", return_value=[("reading", False), ("sauna", True)]):
+        at = run_app()
+        at.text_area[2].input("Sauna then a book")
+        at = suggest_button(at).click().run(timeout=30)
+    captions = [c.value for c in at.caption]
+    assert "New tags: sauna. Swap in an existing tag if one fits." in captions
+    with patch("tagger.suggest_tags", return_value=[("reading", False)]):
+        at = suggest_button(at).click().run(timeout=30)
+    assert not any(c.value.startswith("New tags") for c in at.caption)
+
+
+def test_suggest_error_shows_message_and_keeps_typed_tags(fake, claude_off):
+    import tagger
+
+    tags_on(claude_off)
+    with patch("tagger.suggest_tags", side_effect=tagger.TaggerError(tagger.FAILED)):
+        at = run_app()
+        at.text_area[0].input("Tired")
+        at.text_input(key="tags_text").input("stress")
+        at = suggest_button(at).click().run(timeout=30)
+    assert not at.exception
+    assert "Couldn't suggest tags right now. Type them instead." in [w.value for w in at.warning]
+    assert at.text_input(key="tags_text").value == "stress"
+
+
+def test_save_after_suggest_stores_tags(fake, claude_off):
+    tags_on(claude_off)
+    with patch("tagger.suggest_tags", return_value=[("low energy", False)]):
+        at = run_app()
+        at.text_area[0].input("Drained")
+        at = suggest_button(at).click().run(timeout=30)
+        at = at.button[0].click().run(timeout=30)
+    assert len(fake.rows) == 1
+    assert fake.rows[0]["tags"] == ["low energy"]
