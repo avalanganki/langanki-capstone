@@ -39,3 +39,53 @@ With the real `.env`, a one-off check printed only presence: all six settings pr
 Pending:
 - Locally: done by Ava on 2026-11-05. On http://localhost:8501 (`dev/16-config`), past entries, Oura Refresh, and Suggest tags all work as before.
 - Live: dropped on 2026-11-05 by Ava's decision. The Streamlit app won't be the live version of Patterns; the live URL will be the Render deploy of the new UI (US06). AC2 no longer applies.
+
+## API skeleton (issue #17)
+
+Runs on 2026-11-05, Python 3.9.6, FastAPI 0.128.8, uvicorn 0.39.0, supabase 2.32.0.
+
+What it does:
+- `GET /api/health` returns `{"status": "ok"}` with no sign-in, for the host's health check.
+- `require_user` checks every protected route:
+  - It reads `Authorization: Bearer <token>`.
+  - It asks Supabase whether the token is valid (`auth.get_user(token)`), which works with both current and legacy signing keys.
+  - It allows only the user whose ID matches `ALLOWED_USER_ID`.
+- `GET /api/me` returns `{"signed_in": true}` and nothing else: no email, no IDs.
+- CORS allows only the Vite dev server, `http://localhost:5173`.
+
+Decided while building:
+- A missing or non-Bearer header is refused before Supabase is called.
+- If Supabase can't be reached or isn't configured, the answer is 503 "Couldn't check sign-in. Try again.", not 401. A 401 would wrongly tell Ava to sign in again. A token Supabase rejects is still 401.
+- A blank `ALLOWED_USER_ID` refuses everyone (403), so a missing setting never opens the API.
+
+### Check 1 (AC1): the API starts
+
+`uvicorn api.main:app --port 8000` started. Against the real `.env`:
+
+```
+GET /api/health                                  {"status":"ok"}
+GET /api/me (no header)                          {"detail":"Sign in required."} HTTP 401
+GET /api/me (Bearer not-a-real-token)            {"detail":"Sign in required."} HTTP 401
+```
+
+The made-up token was checked by the real Supabase project and rejected. The server log shows only method, path, and status; the token does not appear in it.
+
+### Check 2 (AC2 to AC5): tests
+
+`tests/test_api.py`:
+- `test_health_needs_no_sign_in`
+- `test_me_without_bearer_token_is_401`: four header cases, and Supabase isn't called (AC2).
+- `test_rejected_token_is_401`, `test_no_user_in_response_is_401`
+- `test_supabase_unreachable_is_503`, `test_missing_supabase_settings_is_503`
+- `test_other_account_is_403` (AC3), `test_blank_allowed_user_is_403`
+- `test_ava_signed_in` (AC4)
+- `test_api_does_not_log_token_or_ids`, and every refusal test checks that the response has no token, ID, or email.
+- `test_cors_allows_vite_dev_server`, `test_cors_refuses_other_origins`
+
+`pytest`: 149 passed (15 new). Supabase is always mocked.
+
+### Check 3: real sign-in
+
+Waits for the frontend skeleton issue, which adds a sign-in screen. Until then, AC4 is covered by tests.
+
+Done by Ava on 2026-11-05: http://localhost:8000/api/health shows `{"status":"ok"}`. `ALLOWED_USER_ID` is not in `.env` yet (checked for presence only); setting it, and creating a Supabase Auth user if needed, moves to the frontend skeleton issue.

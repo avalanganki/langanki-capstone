@@ -68,9 +68,9 @@ Decisions (2026-11-05): Ava chose option B, a separate frontend. React + TypeScr
 
 Planned pieces (each becomes an issue when moved to `docs/todo.md`):
 - Settings (issue #16, done, see `docs/xchangelog.md`): one `config.py` reads `.env` and environment variables for the Supabase, Oura, and Claude settings. It replaces the `st.secrets` fallbacks in `db.py`, `oura.py`, and `tagger.py`, so the modules no longer import Streamlit.
-- API skeleton (issue #17, see `docs/todo.md`): FastAPI app, Supabase access-token check that allows only Ava's account, health route, and pytest with FastAPI's test client.
+- API skeleton (issue #17, done, see `docs/xchangelog.md`): FastAPI app, Supabase access-token check that allows only Ava's account, health route, and pytest with FastAPI's test client.
 - API routes: entries (create, list, get, update, delete), Suggest tags, nights (display and refresh), entry links, and Oura connect, callback, and disconnect.
-- Frontend skeleton: Vite + React + TypeScript, theme tokens from `themes.md` (night and cream palettes, Fraunces and Nunito Sans), Supabase sign-in, an API client, and Vitest.
+- Frontend skeleton (also: create Ava's Supabase Auth user if needed, and set `ALLOWED_USER_ID` in `.env`): Vite + React + TypeScript, theme tokens from `themes.md` (night and cream palettes, Fraunces and Nunito Sans), Supabase sign-in, an API client, and Vitest.
 - Tonight screen: night-sky header, score rings (sample nights labeled as sample), the three questions, Suggest tags with "New tags" and the privacy line, tag chips, and Save.
 - Past entries screen: list, open, edit, delete, "(suggested)" marks, the "Next night" line, and the "Evening before" tags beside each night (absorbs #15 if not built in Streamlit).
 - Oura settings: connect, refresh with "Last updated", and disconnect.
@@ -119,3 +119,6 @@ Found planning US05. "Refresh Oura data" pulls the last 14 days, so entries from
 
 ### Draft a request to Oura about AI use of score data
 Found 2026-11-05 (Ava asked whether Claude could see scores). Sec. 4(d) of the Oura API agreement forbids giving Oura API data to AI models, including typed-in copies within this app. If Claude wording of insights is ever wanted, email Oura's API team for written permission first. Also save the exact Sec. 4(d) text in `docs/research/` so the rule rests on its actual wording. No change to the rule until Oura answers in writing.
+
+### API logs must not record query strings
+Found building #17. uvicorn's access log writes each request's full path, including the query string. When the Oura callback moves to the API (`/callback/?code=...&state=...`), the authorization code would land in the log. Before that route ships, turn off uvicorn's access log or log only method, path without query, and status. CLAUDE.md: logs hold errors and timestamps only.
