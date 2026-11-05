@@ -112,3 +112,35 @@ The real-data view is checked in #10, described in words only.
 `pytest`: 84 passed (7 new). Oura and Supabase are never touched: tests use the in-memory fake client.
 
 `streamlit run app.py` is running, `/_stcore/health` returns `ok`, and the server log has no errors.
+
+## Real API (issue #10)
+
+Run by Ava on 2026-11-05 against her real Oura account. Results are described in words only; no real values are recorded.
+
+### Check 1 (AC1): consent page and connect
+
+Done under #7 (see Connect, Check 4): Oura's consent page asked for daily summaries only, and Patterns showed "Connected to Oura."
+
+### Check 2 (AC2): refresh
+
+Done: "Refresh Oura data" saved 14 nights, and the `nights` table holds 14 rows.
+
+Pending: whether average HRV came back with the `daily` scope (values present, or "No data" in the HRV column).
+
+### Check 3 (AC3): Tonight
+
+Done: Tonight shows the nights labeled "From your Oura ring." with the "Based on N nights." caption.
+
+### Check 4 (AC4): expired sign-in renews itself
+
+Pending.
+
+### Check 5 (AC5): disconnect
+
+Done: after Disconnect, Patterns no longer appears in Ava's Oura connected apps.
+
+Pending: confirm `oura_connection` is empty.
+
+### Check 6 (AC6): Streamlit Cloud
+
+Pending: add `https://<app>.streamlit.app/callback/` as a second redirect URI in the Oura app, put the Oura settings in the app's secrets, and connect on the live URL.
