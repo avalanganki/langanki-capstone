@@ -43,11 +43,11 @@ Decisions (2026-11-03): Oura data is never sent to Claude or any AI model (Oura 
 ### US04 Claude tags: suggest tags from answers
 As Ava, I want Patterns to suggest tags from my written answers, which I check before saving, so tagging is quick and consistent enough to compare against my Oura nights later. Source: PRD FR-4 (and FR-8 for editing).
 
-Decisions (2026-11-05): Ava chose tags before score-aware questions (FR-2). Claude suggests and Ava saves, per the privacy policy ("may be sent to ... suggest tags"). Claude gets only answer text: no question text (FR-2 questions will mention scores), Oura data, name, email, or IDs. Suggestions come from a fixed list so trends stay consistent; Ava can still type any tag. "Not mentioned" is never tagged as "none" (from the backlog item "Off-topic answers"). Model `claude-opus-5-5` at low effort, in one constant. A privacy line under the form covers PRD 10.2's disclosure.
+Decisions (2026-11-05): Ava chose tags before score-aware questions (FR-2). Claude suggests and Ava saves, per the privacy policy ("may be sent to ... suggest tags"). Tags are open, not a fixed list. Ava's idea: Claude gets the known tags (a seed list plus every tag already saved) and must reuse one whenever the meaning matches ("drained" means `low energy`). It creates a new 1 to 3 word tag only when nothing fits, and new tags are flagged so Ava can swap in an existing one. Tags come from every prompt, including energy and wind-down. Claude gets each answer with its neutral question, because "around 3" means nothing without the question, plus the known-tag list. It never gets score-aware lead-ins, Oura data, name, email, or IDs. "Not mentioned" is never tagged as "none" (from the backlog item "Off-topic answers"). Model `claude-opus-5-5` at low effort, in one constant. A privacy line under the form covers PRD 10.2's disclosure.
 
-- Suggest: "Suggest tags" button on Tonight, a fixed tag list, structured output, a privacy caption, and errors that fall back to typing. Issue #11, see `docs/todo.md`.
+- Suggest: "Suggest tags" button on Tonight. Claude reuses known tags, new tags are flagged, the output is structured, a privacy caption sits under the form, and errors fall back to typing. Issue #11, see `docs/todo.md`.
 - Source: store which tags Claude suggested vs. Ava typed, mark them in Past entries, and Suggest on edit. Issue #12, see `docs/todo.md`.
-- Verify: 12 synthetic nights against real Claude (at least 10 match), cost under one cent a night, and the Streamlit Cloud secret. Issue #13, see `docs/todo.md`.
+- Verify: 12 synthetic nights against real Claude, including variant merging and a question-dependent answer (at least 10 match), cost under one cent a night, and the Streamlit Cloud secret. Issue #13, see `docs/todo.md`.
 
 ## Unscheduled
 
@@ -77,3 +77,9 @@ Found planning US04. The venv runs Python 3.9.6, so `pip` installs the last 0.x 
 
 ### Claude follow-up questions
 Found planning US04. PRD section 7 says Claude *may* add a follow-up based only on written answers; the architecture doc gives Claude only tag extraction. Ava to decide whether follow-ups are wanted before FR-2 work.
+
+### Merge old tags saved under different names
+Found planning US04. Tag reuse only applies to new suggestions. Entries saved before it (or with typed variants) can hold `tired` and `low energy` as separate tags, which splits trend counts. Add a "merge tag A into B" action that rewrites past entries after a confirm step. Pick up before trends (FR-6/7).
+
+### Score-aware questions: keep the lead-in separate from the question
+Found planning US04. When FR-2 adds lead-ins like "Your readiness was low this morning.", store the lead-in apart from the neutral question in each entry's answers. Claude tag suggestions send the neutral question only, and `tagger.build_prompt` refuses any question not in the fixed set.
