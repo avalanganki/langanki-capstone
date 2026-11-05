@@ -177,3 +177,17 @@ def test_tagger_does_not_log(caplog):
         tagger.suggest_tags(PAIRS, KNOWN, client=client)
     for _, answer in PAIRS:
         assert answer not in caplog.text
+
+
+# --- Verify cases (issue #13). Checks the synthetic case file only; no Claude call. ---
+
+
+def test_tag_cases_fixture_is_valid():
+    cases = json.loads((FIXTURES / "tag_cases.json").read_text())["cases"]
+    assert len(cases) == 12
+    used = set()
+    for case in cases:
+        assert len(case["answers"]) == len(QUESTIONS)
+        assert set(case["expect"]) <= set(tagger.SEED_TAGS), case["name"]
+        used |= set(case["expect"])
+    assert used == set(tagger.SEED_TAGS)  # every seed tag is checked at least once
