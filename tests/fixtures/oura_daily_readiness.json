@@ -1,0 +1,9 @@
+{
+  "_note": "Synthetic. Made-up values, not real Oura data.",
+  "data": [
+    {"id": "dr-1", "day": "2000-01-01", "score": 79, "timestamp": "2000-01-01T00:00:00+00:00"},
+    {"id": "dr-3", "day": "2000-01-03", "score": 62, "timestamp": "2000-01-03T00:00:00+00:00"},
+    {"id": "dr-4", "day": "2000-01-04", "score": 84, "timestamp": "2000-01-04T00:00:00+00:00"}
+  ],
+  "next_token": null
+}

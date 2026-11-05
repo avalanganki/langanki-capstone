@@ -1,3 +1,4 @@
+import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -8,11 +9,12 @@ from streamlit.testing.v1 import AppTest
 class FakeClient:
     """In-memory stand-in for the Supabase client.
 
-    Tables: `entries` (one entry per date) and `oura_connection` (upsert on id).
+    Tables: `entries` (one entry per date), `oura_connection` (upsert on id), and
+    `nights` (upsert on night_date).
     """
 
     def __init__(self, rows=(), connection=None):
-        self.tables = {"entries": [], "oura_connection": []}
+        self.tables = {"entries": [], "oura_connection": [], "nights": []}
         self._next_id = 1
         for row in rows:
             self._add(dict(row))
@@ -27,6 +29,10 @@ class FakeClient:
     def connection_rows(self):
         return self.tables["oura_connection"]
 
+    @property
+    def night_rows(self):
+        return self.tables["nights"]
+
     def _add(self, row):
         row["id"] = self._next_id
         self._next_id += 1
@@ -35,15 +41,15 @@ class FakeClient:
     def table(self, name):
         assert name in self.tables, name
         self._name = name
-        self._query = {"op": None, "eq": None, "desc": None, "limit": None}
+        self._query = {"op": None, "eq": None, "order": None, "desc": None, "limit": None}
         return self
 
     def insert(self, row):
         self._query.update(op="insert", row=row)
         return self
 
-    def upsert(self, row):
-        self._query.update(op="upsert", row=row)
+    def upsert(self, row, on_conflict="id"):
+        self._query.update(op="upsert", row=row, key=on_conflict)
         return self
 
     def delete(self):
@@ -59,8 +65,7 @@ class FakeClient:
         return self
 
     def order(self, column, desc=False):
-        assert column == "entry_date"
-        self._query["desc"] = desc
+        self._query.update(order=column, desc=desc)
         return self
 
     def eq(self, column, value):
@@ -81,9 +86,10 @@ class FakeClient:
             self._add(row)
             return MagicMock(data=[row])
         if q["op"] == "upsert":
-            row = dict(q["row"])
-            self.tables[self._name] = [r for r in table if r["id"] != row["id"]] + [row]
-            return MagicMock(data=[row])
+            new = [dict(r) for r in (q["row"] if isinstance(q["row"], list) else [q["row"]])]
+            keys = {r[q["key"]] for r in new}
+            self.tables[self._name] = [r for r in table if r[q["key"]] not in keys] + new
+            return MagicMock(data=new)
         rows = list(table)
         if q["eq"]:
             column, value = q["eq"]
@@ -95,8 +101,8 @@ class FakeClient:
             for r in rows:
                 r.update(q["changes"])
             return MagicMock(data=rows)
-        if q["desc"] is not None:
-            rows.sort(key=lambda r: r["entry_date"], reverse=q["desc"])
+        if q["order"] is not None:
+            rows.sort(key=lambda r: r[q["order"]], reverse=q["desc"])
         if q["limit"] is not None:
             rows = rows[: q["limit"]]
         return MagicMock(data=rows)
@@ -470,3 +476,63 @@ def test_disconnect_removes_tokens(oura_settings):
     assert client.connection_rows == []
     assert "Disconnected from Oura." in [s.value for s in at.success]
     assert at.get("link_button")  # back to Connect
+
+
+# --- Fetch Oura nights (issue #8). Synthetic fixtures; requests is mocked. ---
+
+import json
+from pathlib import Path
+
+FIXTURES = Path(__file__).parent / "fixtures"
+FAR_FUTURE = {**TOKENS, "expires_at": "2999-01-01T00:00:00+00:00"}
+
+
+def oura_get(url, params=None, headers=None, timeout=None):
+    name = url.rsplit("/", 1)[1]
+    body = json.loads((FIXTURES / f"oura_{name}.json").read_text())
+    return MagicMock(status_code=200, json=MagicMock(return_value=body))
+
+
+def connected(oura_settings):
+    oura_settings.return_value = dict(FAKE_OURA)
+    return FakeClient(connection=dict(FAR_FUTURE))
+
+
+def test_refresh_saves_nights_and_shows_count(oura_settings):
+    client = connected(oura_settings)
+    today = datetime.date(2000, 1, 5)
+    with patch("db.get_client", return_value=client), patch("oura.requests.get", side_effect=oura_get), patch(
+        "oura.datetime.date"
+    ) as date:
+        date.today.return_value = today
+        date.side_effect = datetime.date
+        at = run_app()
+        assert not any(c.value.startswith("Last updated") for c in at.sidebar.caption)
+        at = at.button(key="oura_refresh").click().run(timeout=30)
+        assert not at.exception
+        assert "Updated 4 nights from Oura." in [s.value for s in at.sidebar.success]
+        assert [n["night_date"] for n in sorted(client.night_rows, key=lambda n: n["night_date"])] == [
+            "2000-01-01", "2000-01-02", "2000-01-03", "2000-01-04",
+        ]
+        assert any(c.value.startswith("Last updated ") for c in at.sidebar.caption)
+        # Refreshing again updates in place: each night appears once.
+        at = at.button(key="oura_refresh").click().run(timeout=30)
+    assert len(client.night_rows) == 4
+    readiness = {n["night_date"]: n["readiness"] for n in client.night_rows}
+    assert readiness["2000-01-02"] is None  # missing stays empty, never zero
+
+
+def test_refresh_on_403_shows_membership_message_and_saves_nothing(oura_settings):
+    client = connected(oura_settings)
+    denied = MagicMock(status_code=403)
+    with patch("db.get_client", return_value=client), patch("oura.requests.get", return_value=denied):
+        at = run_app()
+        at = at.button(key="oura_refresh").click().run(timeout=30)
+    assert not at.exception
+    assert "Oura denied access. An active Oura membership may be needed." in [w.value for w in at.sidebar.warning]
+    assert client.night_rows == []
+
+
+def test_not_configured_has_no_refresh_button(fake):
+    at = run_app()
+    assert not [b for b in at.button if b.key == "oura_refresh"]

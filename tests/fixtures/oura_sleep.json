@@ -1,0 +1,13 @@
+{
+  "_note": "Synthetic. Made-up values, not real Oura data. 01: main sleep. 02: main sleep plus a nap. 03: nap only. 04: two main sleeps, the longer wins. 05: nap only and no daily scores, so the day is left out.",
+  "data": [
+    {"id": "s-1", "day": "2000-01-01", "type": "long_sleep", "average_hrv": 52, "total_sleep_duration": 27000},
+    {"id": "s-2a", "day": "2000-01-02", "type": "long_sleep", "average_hrv": 47, "total_sleep_duration": 25200},
+    {"id": "s-2b", "day": "2000-01-02", "type": "late_nap", "average_hrv": 70, "total_sleep_duration": 1800},
+    {"id": "s-3", "day": "2000-01-03", "type": "late_nap", "average_hrv": 65, "total_sleep_duration": 2400},
+    {"id": "s-4a", "day": "2000-01-04", "type": "long_sleep", "average_hrv": 40, "total_sleep_duration": 9000},
+    {"id": "s-4b", "day": "2000-01-04", "type": "long_sleep", "average_hrv": 58, "total_sleep_duration": 21600},
+    {"id": "s-5", "day": "2000-01-05", "type": "rest", "average_hrv": 61, "total_sleep_duration": 1200}
+  ],
+  "next_token": null
+}
