@@ -50,6 +50,6 @@ Any change to this policy will be posted on this page with a new effective date.
 
 ## Contact
 
-Questions or deletion requests: [CONTACT EMAIL]
+Questions or deletion requests: ava@langanki.com
 
 Source code: https://github.com/avalanganki/langanki-capstone
