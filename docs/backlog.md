@@ -49,6 +49,16 @@ Decisions (2026-11-05): Ava chose tags before score-aware questions (FR-2). Clau
 - Source: store which tags Claude suggested vs. Ava typed, mark them in Past entries, and Suggest on edit. Issue #12, done, see `docs/xchangelog.md`.
 - Verify: 12 synthetic nights against real Claude, including variant merging and a question-dependent answer (at least 10 match), cost under one cent a night, and the Streamlit Cloud secret. Issue #13, done, see `docs/xchangelog.md`.
 
+## v0.5.0
+
+### US05 Link entries to the next night
+As Ava, I want each evening entry linked to the following night's Oura scores, and the tags from the evening before shown beside each night, so I can see how the night went after the day I described. Trends (FR-6/7) build on this. Source: PRD FR-5.
+
+Decisions (2026-11-05): Oura's `day` is the date sleep ended, so the entry dated D links to the night dated D + 1. The link is worked out by date each time, never stored, so it stays right after a re-fetch, an edit, or a delete. Three honest states when there's no night: "No ring data for this night" (fetched, but Oura had nothing), "Not fetched from Oura yet", and "Connect Oura..." when not connected. Sample nights are never linked to real entries. App code only; nothing goes to Claude.
+
+- Link: a "Next night" line on each past entry, with linked, no-ring-data, not-fetched, and not-connected states, and a linked-night count for trends. Issue #14, see `docs/todo.md`.
+- Evening before: an "Evening before" tags column on the Tonight Oura table, never on sample nights. Issue #15, see `docs/todo.md`.
+
 ## Unscheduled
 
 ### Question generation: don't ask about screen use
@@ -61,7 +71,7 @@ Found while planning US02. `supabase/migrations/0001_test_entries.sql` is left o
 Found testing US02 Create (answering the caffeine question with only food). The entry saves as-is, which is right, but a missing `caffeine` tag would later read as "no caffeine" in trends. When tag extraction (FR-4) and trends (FR-6/7) are built, treat a night with no caffeine tag as unknown, not zero, unless the answer says none. Possibly a short neutral follow-up when an answer doesn't address its question.
 
 ### Nights with no ring data
-Found testing US02 Read. If the ring wasn't worn, Oura has no sleep score for that night. When Oura linking (FR-5) is built, the entry should still open and show "No ring data for this night" instead of blanks or zeros, and that night is left out of any correlation (and out of its night count).
+Scheduled as US05 Link, issue #14 (the entry view); excluding these nights from correlations is part of FR-7. Found testing US02 Read. If the ring wasn't worn, Oura has no sleep score for that night. When Oura linking (FR-5) is built, the entry should still open and show "No ring data for this night" instead of blanks or zeros, and that night is left out of any correlation (and out of its night count).
 
 ### Tag source: typed vs found in answers
 Done in US04 Source, issue #12 (see `docs/xchangelog.md`). Found testing US02 Update. Ava can add tags that aren't in her answers, which is allowed (she knows things she didn't write). Once Claude extracts tags (FR-4), record whether each tag was typed by Ava or found by Claude, so an edit never gets silently overwritten by re-extraction.
@@ -83,3 +93,10 @@ Found planning US04. Tag reuse only applies to new suggestions. Entries saved be
 
 ### Score-aware questions: keep the lead-in separate from the question
 Found planning US04. When FR-2 adds lead-ins like "Your readiness was low this morning.", store the lead-in apart from the neutral question in each entry's answers. Claude tag suggestions send the neutral question only, and `tagger.build_prompt` refuses any question not in the fixed set.
+
+
+### Fetch nights older than the 14-day window
+Found planning US05. "Refresh Oura data" pulls the last 14 days, so entries from before the first refresh show "Not fetched from Oura yet." Add a one-time backfill (or a refresh range that reaches the oldest entry) so every entry can link. Watch the Oura rate limit.
+
+### Draft a request to Oura about AI use of score data
+Found 2026-11-05 (Ava asked whether Claude could see scores). Sec. 4(d) of the Oura API agreement forbids giving Oura API data to AI models, including typed-in copies within this app. If Claude wording of insights is ever wanted, email Oura's API team for written permission first. Also save the exact Sec. 4(d) text in `docs/research/` so the rule rests on its actual wording. No change to the rule until Oura answers in writing.
