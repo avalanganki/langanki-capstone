@@ -88,4 +88,4 @@ The made-up token was checked by the real Supabase project and rejected. The ser
 
 Waits for the frontend skeleton issue, which adds a sign-in screen. Until then, AC4 is covered by tests.
 
-Pending: Ava opens http://localhost:8000/api/health and sees `{"status":"ok"}`. She also adds her Supabase user ID to `.env` as `ALLOWED_USER_ID` (Supabase, Authentication, then Users). That's needed before the frontend sign-in works.
+Done by Ava on 2026-11-05: http://localhost:8000/api/health shows `{"status":"ok"}`. `ALLOWED_USER_ID` is not in `.env` yet (checked for presence only); setting it, and creating a Supabase Auth user if needed, moves to the frontend skeleton issue.

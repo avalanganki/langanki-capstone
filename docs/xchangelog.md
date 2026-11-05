@@ -29,3 +29,4 @@ Completed items moved from `docs/todo.md`.
 ## v0.6.0
 
 - [x] #16 US06 Settings: one config module; backend modules no longer import Streamlit. Merged 2026-11-05. Checked locally; the live Streamlit check was dropped (no live Streamlit, Ava decision). Evidence: `docs/features/backend.md`
+- [x] #17 US06 API skeleton: FastAPI with Supabase login check for Ava only. Merged 2026-11-05. Evidence: `docs/features/backend.md`

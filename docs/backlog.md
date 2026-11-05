@@ -68,9 +68,9 @@ Decisions (2026-11-05): Ava chose option B, a separate frontend. React + TypeScr
 
 Planned pieces (each becomes an issue when moved to `docs/todo.md`):
 - Settings (issue #16, done, see `docs/xchangelog.md`): one `config.py` reads `.env` and environment variables for the Supabase, Oura, and Claude settings. It replaces the `st.secrets` fallbacks in `db.py`, `oura.py`, and `tagger.py`, so the modules no longer import Streamlit.
-- API skeleton (issue #17, see `docs/todo.md`): FastAPI app, Supabase access-token check that allows only Ava's account, health route, and pytest with FastAPI's test client.
+- API skeleton (issue #17, done, see `docs/xchangelog.md`): FastAPI app, Supabase access-token check that allows only Ava's account, health route, and pytest with FastAPI's test client.
 - API routes: entries (create, list, get, update, delete), Suggest tags, nights (display and refresh), entry links, and Oura connect, callback, and disconnect.
-- Frontend skeleton: Vite + React + TypeScript, theme tokens from `themes.md` (night and cream palettes, Fraunces and Nunito Sans), Supabase sign-in, an API client, and Vitest.
+- Frontend skeleton (also: create Ava's Supabase Auth user if needed, and set `ALLOWED_USER_ID` in `.env`): Vite + React + TypeScript, theme tokens from `themes.md` (night and cream palettes, Fraunces and Nunito Sans), Supabase sign-in, an API client, and Vitest.
 - Tonight screen: night-sky header, score rings (sample nights labeled as sample), the three questions, Suggest tags with "New tags" and the privacy line, tag chips, and Save.
 - Past entries screen: list, open, edit, delete, "(suggested)" marks, the "Next night" line, and the "Evening before" tags beside each night (absorbs #15 if not built in Streamlit).
 - Oura settings: connect, refresh with "Last updated", and disconnect.

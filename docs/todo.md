@@ -12,4 +12,3 @@ Items moved from `docs/backlog.md` that we are working on now.
 
 ## v0.6.0 US06 New UI
 
-- [ ] #17 API skeleton: FastAPI with Supabase login check for Ava only
