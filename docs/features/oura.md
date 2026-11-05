@@ -97,7 +97,7 @@ Decided while building:
 
 Covered by `test_not_connected_gives_sample`, `test_connected_without_rows_gives_sample`, and `test_tonight_sample_label_when_not_connected`.
 
-Pending: Ava screenshots Tonight while not connected (Disconnect first, or before any Refresh), showing "Sample data. Not real Oura data."
+Done by Ava on 2026-11-05: Tonight while not connected shows the sample nights labeled "Sample data. Not real Oura data." (screenshot kept out of the repo).
 
 ### Check 2 (AC2 to AC4): Oura nights, "No data", night count
 
