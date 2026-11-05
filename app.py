@@ -15,7 +15,7 @@ from entries import (
     parse_tags,
     update_entry,
 )
-from sample_data import load_nights
+from nights import has_values, load_display_nights, show_value
 
 st.title("Patterns")
 
@@ -94,21 +94,23 @@ with tonight:
         except DuplicateEntryError:
             st.warning("You already have an entry for this date. Edit it in Past entries.")
 
-    st.caption("Sample data. Not real Oura data.")
-    nights = load_nights()
+    source, nights = load_display_nights(db.get_client())
+    st.caption("From your Oura ring." if source == "oura" else "Sample data. Not real Oura data.")
+    # Values are shown as text so a missing one reads "No data", never 0 or blank.
     st.dataframe(
         [
             {
                 "Date": n["date"],
-                "Sleep score": n["sleep_score"],
-                "Readiness": n["readiness"],
-                "HRV (ms)": n["avg_hrv"],
+                "Sleep score": show_value(n["sleep_score"]),
+                "Readiness": show_value(n["readiness"]),
+                "HRV (ms)": show_value(n["avg_hrv"]),
             }
             for n in nights
         ],
         hide_index=True,
     )
-    st.caption(f"Based on {len(nights)} nights.")
+    counted = sum(1 for n in nights if has_values(n))
+    st.caption(f"Based on {counted} {'night' if counted == 1 else 'nights'}.")
 
 def format_date(iso):
     d = datetime.date.fromisoformat(iso)
