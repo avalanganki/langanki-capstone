@@ -45,17 +45,32 @@ def disconnect_oura():
     st.session_state.oura_flash = "Disconnected from Oura."
 
 
+def refresh_oura():
+    try:
+        count = oura.sync_nights(db.get_client())
+    except oura.OuraError as err:
+        st.session_state.oura_error = str(err)  # plain-language message, no tokens or values
+    else:
+        st.session_state.oura_flash = f"Updated {count} {'night' if count == 1 else 'nights'} from Oura."
+
+
 handle_oura_callback()
 
 with st.sidebar:
     st.subheader("Oura")
     if "oura_flash" in st.session_state:
         st.success(st.session_state.pop("oura_flash"))
+    if "oura_error" in st.session_state:
+        st.warning(st.session_state.pop("oura_error"))
     oura_settings = oura.get_settings()
     if not oura.is_configured(oura_settings):
         st.info("Waiting for Oura app approval. Showing sample data.")
     elif oura.load_connection(db.get_client()):
         st.write("Connected to Oura.")
+        st.button("Refresh Oura data", key="oura_refresh", on_click=refresh_oura)
+        updated = oura.last_fetched(db.get_client())
+        if updated:
+            st.caption(f"Last updated {updated:%b} {updated.day}, {updated:%Y %H:%M} UTC")
         st.button("Disconnect", key="oura_disconnect", on_click=disconnect_oura)
     else:
         st.link_button("Connect Oura", oura.start_sign_in(oura_settings))

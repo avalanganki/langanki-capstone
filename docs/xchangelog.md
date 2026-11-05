@@ -17,3 +17,4 @@ Completed items moved from `docs/todo.md`.
 ## v0.3.0
 
 - [x] #7 US03 Connect: sign in with Oura, store tokens, disconnect. Real sign-in checked by Ava and merged 2026-11-05. Evidence: `docs/features/oura.md`
+- [x] #8 US03 Fetch: pull daily sleep score, readiness, and average HRV into `nights`. Merged 2026-11-05. Evidence: `docs/features/oura.md`
