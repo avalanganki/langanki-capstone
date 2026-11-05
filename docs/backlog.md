@@ -38,6 +38,17 @@ Decisions (2026-11-03): Oura data is never sent to Claude or any AI model (Oura 
 - Show: the Tonight tab shows stored Oura nights when connected and sample nights otherwise, labeled, with the night count. Issue #9, done, see `docs/xchangelog.md`.
 - Verify: after Oura approves the app, run the real connect, fetch, show, refresh, and disconnect checks; confirm average HRV works with `daily`; add the Streamlit Cloud redirect URI. Issue #10, see `docs/todo.md`.
 
+## v0.4.0
+
+### US04 Claude tags: suggest tags from answers
+As Ava, I want Patterns to suggest tags from my written answers, which I check before saving, so tagging is quick and consistent enough to compare against my Oura nights later. Source: PRD FR-4 (and FR-8 for editing).
+
+Decisions (2026-11-05): Ava chose tags before score-aware questions (FR-2). Claude suggests and Ava saves, per the privacy policy ("may be sent to ... suggest tags"). Claude gets only answer text: no question text (FR-2 questions will mention scores), Oura data, name, email, or IDs. Suggestions come from a fixed list so trends stay consistent; Ava can still type any tag. "Not mentioned" is never tagged as "none" (from the backlog item "Off-topic answers"). Model `claude-opus-5-5` at low effort, in one constant. A privacy line under the form covers PRD 10.2's disclosure.
+
+- Suggest: "Suggest tags" button on Tonight, a fixed tag list, structured output, a privacy caption, and errors that fall back to typing. Issue #11, see `docs/todo.md`.
+- Source: store which tags Claude suggested vs. Ava typed, mark them in Past entries, and Suggest on edit. Issue #12, see `docs/todo.md`.
+- Verify: 12 synthetic nights against real Claude (at least 10 match), cost under one cent a night, and the Streamlit Cloud secret. Issue #13, see `docs/todo.md`.
+
 ## Unscheduled
 
 ### Question generation: don't ask about screen use
@@ -53,10 +64,16 @@ Found testing US02 Create (answering the caffeine question with only food). The 
 Found testing US02 Read. If the ring wasn't worn, Oura has no sleep score for that night. When Oura linking (FR-5) is built, the entry should still open and show "No ring data for this night" instead of blanks or zeros, and that night is left out of any correlation (and out of its night count).
 
 ### Tag source: typed vs found in answers
-Found testing US02 Update. Ava can add tags that aren't in her answers, which is allowed (she knows things she didn't write). Once Claude extracts tags (FR-4), record whether each tag was typed by Ava or found by Claude, so an edit never gets silently overwritten by re-extraction.
+Scheduled as US04 Source, issue #12. Found testing US02 Update. Ava can add tags that aren't in her answers, which is allowed (she knows things she didn't write). Once Claude extracts tags (FR-4), record whether each tag was typed by Ava or found by Claude, so an edit never gets silently overwritten by re-extraction.
 
 ### Delete a range of entries (e.g. a week)
 Found testing US02 Delete. #6 deletes one entry at a time; there is no bulk delete. FR-11 asks for single-entry and delete-all only. If a range delete is wanted, it needs its own confirm step. Trends and correlations must be computed from whatever entries remain and the "based on N nights" count must drop to match; deleted nights show as gaps, never filled in.
 
 ### Journal answers that mention Oura scores
 Found with the decision above. If Ava types her readiness or sleep score into an answer, that text would reach Claude. When tag extraction (FR-4) is built, decide whether to strip numbers that look like scores before sending, or just note it in the privacy policy.
+
+### Python 3.10+ for the Anthropic SDK 1.x
+Found planning US04. The venv runs Python 3.9.6, so `pip` installs the last 0.x `anthropic` SDK; 1.x needs Python 3.10+. Upgrade the local venv and pin the Streamlit Cloud Python version, then move to `anthropic` 1.x.
+
+### Claude follow-up questions
+Found planning US04. PRD section 7 says Claude *may* add a follow-up based only on written answers; the architecture doc gives Claude only tag extraction. Ava to decide whether follow-ups are wanted before FR-2 work.
