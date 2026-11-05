@@ -78,10 +78,8 @@ Decided while building:
 
 ### Check 3: `0004_nights.sql` applied
 
-Pending: Ava runs `supabase/migrations/0004_nights.sql` in the Supabase SQL editor and screenshots the empty `nights` table's columns.
+Done by Ava on 2026-11-05: `0004_nights.sql` applied in Supabase; the empty `nights` table shows `night_date`, `sleep_score`, `readiness`, `avg_hrv`, and `fetched_at`.
 
 ### Check 4: not connected
 
-Covered by `test_not_configured_has_no_refresh_button` and `test_oura_not_configured_shows_waiting_message`.
-
-Pending: Ava's running app is configured and connected, so the waiting message no longer shows there. Screenshot the sidebar with "Refresh Oura data" and "Disconnect" visible. Optionally, click Disconnect to screenshot the not-connected state with no Refresh button.
+Covered by `test_not_configured_has_no_refresh_button` and `test_oura_not_conDone by Ava on 2026-11-05: the connected sidebar shows "Refresh Oura data" and "Disconnect" (screenshot kept out of the repo, no real values shown). The not-configured state is covered by the tests above.ted state with no Refresh button.
