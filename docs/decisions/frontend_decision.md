@@ -12,7 +12,7 @@ Date: 2026-11-05. Decided by Ava. Supersedes the interface part of `stack_decisi
 - **Frontend:** React with TypeScript, built with Vite. A phone-first single-page app styled from `themes.md`.
 - **Backend:** FastAPI (Python). It reuses the existing modules (`entries.py`, `oura.py`, `tagger.py`, `links.py`, `nights.py`) and holds every secret: the Supabase secret key, the Oura client secret and tokens, and the Claude API key. The browser never sees them.
 - **Login:** Supabase Auth. The browser signs in with Supabase and sends the user's access token to the API. The API checks it and allows only Ava's account (single user this semester).
-- **Hosting:** one web service that runs FastAPI and also serves the built frontend, so there is one URL. To be confirmed: Render's free tier (it sleeps when idle, like Streamlit Community Cloud).
+- **Hosting:** one web service that runs FastAPI and also serves the built frontend, so there is one URL. Render's free tier, confirmed by Ava on 2026-11-05. It sleeps when idle, like Streamlit Community Cloud.
 - **Oura redirect URI:** the callback moves to the API, at `http://localhost:8000/callback/` locally and `https://<app>/callback/` live. Both must be added to the Oura app registration, exactly, with the trailing slash.
 - **Transition:** Streamlit keeps running until the new UI matches it (Tonight, Past entries, Oura connect and refresh, Suggest tags). Then `app.py` and the Streamlit dependency are removed in their own issue.
 

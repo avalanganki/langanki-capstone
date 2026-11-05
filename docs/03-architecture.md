@@ -9,7 +9,7 @@ MVP Slice. Items in the Won't column are not shown
 Choice | Serves | Downsides
 React + TypeScript (Vite) | Fr-2 Fr-3 Fr-6 Fr-8 | A second language; more code than Streamlit
 FastAPI (Python) | All: holds secrets, reuses the Python modules | One more piece to deploy
-Render web service (to confirm) | Live URL for API and frontend | Free tier sleeps when idle, first load is slow
+Render web service | Live URL for API and frontend | Free tier sleeps when idle, first load is slow
 Supabase (database and Auth) | Fr-3 Fr-4 Fr-5, login | Health data and journal text live on third-party server
 Oura API | Fr-1 | Requires an active membership
 Claude API | Fr-4 | Costs money per call. Sees journal answers, neutral questions, and the tag list only, never Oura data (Oura agreement Sec. 4(d))

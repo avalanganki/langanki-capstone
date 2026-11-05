@@ -57,7 +57,7 @@ As Ava, I want each evening entry linked to the following night's Oura scores, a
 Decisions (2026-11-05): Oura's `day` is the date sleep ended, so the entry dated D links to the night dated D + 1. The link is worked out by date each time, never stored, so it stays right after a re-fetch, an edit, or a delete. Three honest states when there's no night: "No ring data for this night" (fetched, but Oura had nothing), "Not fetched from Oura yet", and "Connect Oura..." when not connected. Sample nights are never linked to real entries. App code only; nothing goes to Claude.
 
 - Link: a "Next night" line on each past entry, with linked, no-ring-data, not-fetched, and not-connected states, and a linked-night count for trends. Issue #14, see `docs/todo.md`.
-- Evening before: an "Evening before" tags column on the Tonight Oura table, never on sample nights. Issue #15, see `docs/todo.md`.
+- Evening before: an "Evening before" tags column beside each night, never on sample nights. Issue #15 closed 2026-11-05 as folded into US06: built in the new UI instead of Streamlit.
 
 ## v0.6.0
 
@@ -67,14 +67,14 @@ As Ava, I want Patterns to look and feel like the Patterns design on my phone (n
 Decisions (2026-11-05): Ava chose option B, a separate frontend. React + TypeScript (Vite) talks to a FastAPI backend that reuses the Python modules and holds every secret. Login is Supabase Auth, limited to Ava's account. Streamlit stays until the new UI matches it, then is removed. The prototype is corrected for the project rules: no causal follow-up, no screen-time question, the tag reuse rule, and a night count on every card. Fallback: if it isn't at parity by Nov 19, keep Streamlit for the demo.
 
 Planned pieces (each becomes an issue when moved to `docs/todo.md`):
-- Settings: one `config.py` reads `.env` and environment variables for the Supabase, Oura, and Claude settings. It replaces the `st.secrets` fallbacks in `db.py`, `oura.py`, and `tagger.py`, so the modules no longer import Streamlit.
-- API skeleton: FastAPI app, Supabase access-token check that allows only Ava's account, health route, and pytest with FastAPI's test client.
+- Settings (issue #16, see `docs/todo.md`): one `config.py` reads `.env` and environment variables for the Supabase, Oura, and Claude settings. It replaces the `st.secrets` fallbacks in `db.py`, `oura.py`, and `tagger.py`, so the modules no longer import Streamlit.
+- API skeleton (issue #17, see `docs/todo.md`): FastAPI app, Supabase access-token check that allows only Ava's account, health route, and pytest with FastAPI's test client.
 - API routes: entries (create, list, get, update, delete), Suggest tags, nights (display and refresh), entry links, and Oura connect, callback, and disconnect.
 - Frontend skeleton: Vite + React + TypeScript, theme tokens from `themes.md` (night and cream palettes, Fraunces and Nunito Sans), Supabase sign-in, an API client, and Vitest.
 - Tonight screen: night-sky header, score rings (sample nights labeled as sample), the three questions, Suggest tags with "New tags" and the privacy line, tag chips, and Save.
 - Past entries screen: list, open, edit, delete, "(suggested)" marks, the "Next night" line, and the "Evening before" tags beside each night (absorbs #15 if not built in Streamlit).
 - Oura settings: connect, refresh with "Last updated", and disconnect.
-- Deploy: one Render web service (to confirm) serving the API and the built frontend; secrets in its environment; the new Oura redirect URIs registered.
+- Deploy: one Render web service (confirmed by Ava 2026-11-05) serving the API and the built frontend; secrets in its environment; the new Oura redirect URIs registered.
 - Retire Streamlit: remove `app.py`, its AppTest tests, and the dependency once the new UI is at parity; update CLAUDE.md's run table.
 - Insights screen: part of trends (FR-6/7), not this story.
 
