@@ -53,3 +53,40 @@ Done by Ava on 2026-11-05: with no key, "Suggest tags" is disabled and the page 
 ### Check 3: running app with a key
 
 Done by Ava on 2026-11-05 with synthetic answers: "Suggest tags" filled the Tags box (with the "New tags" caption when a tag was new), and Save stored the entry with those tags. Screenshots kept out of the repo.
+
+## Source (issue #12)
+
+Runs on 2026-11-05, Python 3.9.6. All entries in tests are synthetic.
+
+Decided while building:
+- `suggested_tags` holds what Claude returned on the last Suggest for that entry. A tag Ava both typed and got suggested shows as suggested.
+- The edit form now loads the saved answers and tags into the boxes when Edit is clicked, instead of using widget defaults. That lets Suggest write into the Tags box without a Streamlit warning.
+- Cancel after Suggest in edit mode discards the suggestion. Nothing is stored.
+- If an older entry's question isn't one of today's fixed questions, Suggest sends nothing and shows "Couldn't suggest tags right now. Type them instead."
+- The Tonight Tags box key is now `tonight_tags`; Tonight and edit share one suggest helper (`run_suggest`).
+
+### Check 1: `0005_entry_suggested_tags.sql` applied
+
+Pending: Ava runs `supabase/migrations/0005_entry_suggested_tags.sql` in the Supabase SQL editor and shows the new `suggested_tags` column (not row contents). This must happen before saving from the running app: until then, Save fails because the column doesn't exist.
+
+### Check 2 (AC1 to AC5): tests
+
+`tests/test_entries.py`:
+- `test_create_entry_stores_suggested_tags`, `test_update_entry_stores_new_suggestion`
+- `test_update_entry_without_suggestion_keeps_stored`
+- `test_tag_sources_marks_suggested_and_typed`, `test_tag_sources_old_entry_all_typed` (AC4)
+
+`tests/test_app.py`:
+- `test_save_after_suggest_stores_suggested_tags`: Suggest, remove one tag, type one, and save (AC1, AC2).
+- `test_save_without_suggest_stores_no_suggestions`
+- `test_past_entries_marks_only_suggested_tags` (AC1), `test_old_entry_shows_tags_as_before` (AC4)
+- `test_suggest_in_edit_saves_only_on_save_changes` (AC3)
+- `test_cancel_after_suggest_in_edit_changes_nothing`
+- `test_removed_tag_stays_removed_on_later_edit`: no automatic re-suggest, and the stored suggestion is kept (AC2).
+- `test_edit_suggest_disabled_when_not_configured`
+
+`pytest`: 126 passed (13 new). Claude is never called. The running app's `/_stcore/health` returns `ok` and the server log has no errors.
+
+### Check 3: running app
+
+Pending: with synthetic answers, Ava clicks Suggest, removes one tag, types one, and saves. She screenshots Past entries showing "(suggested)" only on Claude's tags. Optionally, she edits an older entry, clicks Suggest, then "Save changes".

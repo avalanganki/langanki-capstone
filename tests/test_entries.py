@@ -12,6 +12,7 @@ from entries import (
     get_entry,
     list_entries,
     parse_tags,
+    tag_sources,
     update_entry,
 )
 
@@ -40,7 +41,12 @@ def test_create_entry_inserts_row():
     create_entry(client, DATE, answers("Low", "2pm", ""), ["stress"])
     client.table.assert_called_once_with("entries")
     client.table.return_value.insert.assert_called_once_with(
-        {"entry_date": "2026-01-05", "answers": answers("Low", "2pm", ""), "tags": ["stress"]}
+        {
+            "entry_date": "2026-01-05",
+            "answers": answers("Low", "2pm", ""),
+            "tags": ["stress"],
+            "suggested_tags": [],
+        }
     )
 
 
@@ -123,3 +129,38 @@ def test_delete_entry_deletes_by_id_only():
     client.table.assert_called_once_with("entries")
     client.table.return_value.delete.assert_called_once_with()
     client.table.return_value.delete.return_value.eq.assert_called_once_with("id", 7)
+
+
+# --- Tag source (issue #12) ---
+
+
+def test_create_entry_stores_suggested_tags():
+    client = MagicMock()
+    create_entry(client, DATE, answers("Drained", "", ""), ["low energy", "deadline"], ("low energy",))
+    row = client.table.return_value.insert.call_args.args[0]
+    assert row["suggested_tags"] == ["low energy"]
+    assert row["tags"] == ["low energy", "deadline"]
+
+
+def test_update_entry_stores_new_suggestion():
+    client = MagicMock()
+    update_entry(client, 7, answers("Drained", "", ""), "low energy", ["low energy", "nap"])
+    changes = client.table.return_value.update.call_args.args[0]
+    assert changes["suggested_tags"] == ["low energy", "nap"]
+
+
+def test_update_entry_without_suggestion_keeps_stored():
+    client = MagicMock()
+    update_entry(client, 7, answers("Drained", "", ""), "low energy")
+    changes = client.table.return_value.update.call_args.args[0]
+    assert "suggested_tags" not in changes
+
+
+def test_tag_sources_marks_suggested_and_typed():
+    entry = {"tags": ["low energy", "deadline", "nap"], "suggested_tags": ["nap", "low energy", "stress"]}
+    assert tag_sources(entry) == [("low energy", "suggested"), ("deadline", "typed"), ("nap", "suggested")]
+
+
+def test_tag_sources_old_entry_all_typed():
+    assert tag_sources({"tags": ["stress"]}) == [("stress", "typed")]
+    assert tag_sources({"tags": ["stress"], "suggested_tags": None}) == [("stress", "typed")]

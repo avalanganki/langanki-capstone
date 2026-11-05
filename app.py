@@ -14,6 +14,7 @@ from entries import (
     list_entries,
     delete_entry,
     parse_tags,
+    tag_sources,
     update_entry,
 )
 from nights import has_values, load_display_nights, show_value
@@ -78,21 +79,46 @@ with st.sidebar:
 
 tonight, past = st.tabs(["Tonight", "Past entries"])
 
-def suggest_tonight_tags():
-    # Only the fixed questions and typed answers go to Claude, never Oura data.
-    pairs = [(q, st.session_state.get(f"answer_{i}", "")) for i, q in enumerate(QUESTIONS)]
-    st.session_state.pop("new_tags", None)
+PRIVACY_CAPTION = (
+    "Suggest tags sends only your answers, the questions, and your tag list to Anthropic's "
+    "Claude API, never Oura data, your name, or email. Anthropic deletes API data within 30 days."
+)
+
+
+def run_suggest(pairs, prefix):
+    """Merge Claude's suggestions into the `<prefix>tags` box. Saves nothing.
+
+    Only the fixed questions and typed answers go to Claude, never Oura data.
+    Remembers the raw suggestion in `<prefix>suggested` so Save can store it (#12).
+    """
+    st.session_state.pop(f"{prefix}new_tags", None)
     try:
         suggested = tagger.suggest_tags(pairs, tagger.known_tags(db.get_client()))
-    except tagger.TaggerError as err:
-        st.session_state.tag_error = str(err)
+    except (tagger.TaggerError, ValueError):
+        # ValueError: an entry question isn't one of the fixed ones, so nothing was sent.
+        st.session_state[f"{prefix}tag_error"] = tagger.FAILED
         return
-    tags = parse_tags(st.session_state.get("tags_text", ""))
+    tags = parse_tags(st.session_state.get(f"{prefix}tags", ""))
     tags += [t for t, _ in suggested if t not in tags]
-    st.session_state.tags_text = ", ".join(tags)
+    st.session_state[f"{prefix}tags"] = ", ".join(tags)
+    st.session_state[f"{prefix}suggested"] = [t for t, _ in suggested]
     new = [t for t, is_new in suggested if is_new]
     if new:
-        st.session_state.new_tags = new
+        st.session_state[f"{prefix}new_tags"] = new
+
+
+def show_tag_notes(prefix, tags_on):
+    if f"{prefix}tag_error" in st.session_state:
+        st.warning(st.session_state.pop(f"{prefix}tag_error"))
+    if f"{prefix}new_tags" in st.session_state:
+        new = ", ".join(st.session_state[f"{prefix}new_tags"])
+        st.caption(f"New tags: {new}. Swap in an existing tag if one fits.")
+    st.caption(PRIVACY_CAPTION if tags_on else "Tag suggestions are off (no Claude API key).")
+
+
+def suggest_tonight_tags():
+    pairs = [(q, st.session_state.get(f"answer_{i}", "")) for i, q in enumerate(QUESTIONS)]
+    run_suggest(pairs, "tonight_")
 
 
 with tonight:
@@ -104,29 +130,23 @@ with tonight:
             {"question": q, "answer": st.text_area(q, key=f"answer_{i}")}
             for i, q in enumerate(QUESTIONS)
         ]
-        tags_text = st.text_input("Tags (comma-separated)", key="tags_text")
+        tags_text = st.text_input("Tags (comma-separated)", key="tonight_tags")
         submitted = st.form_submit_button("Save")
         st.form_submit_button(
             "Suggest tags", key="suggest_tags", on_click=suggest_tonight_tags, disabled=not tags_on
         )
 
-    if "tag_error" in st.session_state:
-        st.warning(st.session_state.pop("tag_error"))
-    if "new_tags" in st.session_state:
-        st.caption(
-            f"New tags: {', '.join(st.session_state.new_tags)}. Swap in an existing tag if one fits."
-        )
-    if tags_on:
-        st.caption(
-            "Suggest tags sends only your answers, the questions, and your tag list to Anthropic's "
-            "Claude API, never Oura data, your name, or email. Anthropic deletes API data within 30 days."
-        )
-    else:
-        st.caption("Tag suggestions are off (no Claude API key).")
+    show_tag_notes("tonight_", tags_on)
 
     if submitted:
         try:
-            create_entry(db.get_client(), entry_date, answers, parse_tags(tags_text))
+            create_entry(
+                db.get_client(),
+                entry_date,
+                answers,
+                parse_tags(tags_text),
+                st.session_state.get("tonight_suggested", []),
+            )
             st.success(f"Saved your entry for {entry_date.isoformat()}.")
         except ValueError:
             st.warning("Answer at least one question to save.")
@@ -156,12 +176,31 @@ def format_date(iso):
     return f"{d:%a, %b} {d.day}, {d.year}"
 
 
-def start_edit(entry_id):
-    st.session_state.editing = entry_id
+EDIT_KEYS = ("edit_suggested", "edit_new_tags", "edit_tag_error")
+
+
+def start_edit(entry):
+    # Load the saved values into the form here, not via widget defaults, so Suggest can update the Tags box.
+    for i, item in enumerate(entry["answers"]):
+        st.session_state[f"edit_answer_{i}"] = item["answer"]
+    st.session_state.edit_tags = ", ".join(entry["tags"])
+    for key in EDIT_KEYS:
+        st.session_state.pop(key, None)
+    st.session_state.editing = entry["id"]
 
 
 def cancel_edit():
     st.session_state.editing = None
+    for key in EDIT_KEYS:
+        st.session_state.pop(key, None)
+
+
+def suggest_edit_tags(entry):
+    pairs = [
+        (item["question"], st.session_state.get(f"edit_answer_{i}", ""))
+        for i, item in enumerate(entry["answers"])
+    ]
+    run_suggest(pairs, "edit_")
 
 
 def save_edit(entry):
@@ -170,11 +209,17 @@ def save_edit(entry):
         for i, item in enumerate(entry["answers"])
     ]
     try:
-        update_entry(db.get_client(), entry["id"], answers, st.session_state.edit_tags)
+        update_entry(
+            db.get_client(),
+            entry["id"],
+            answers,
+            st.session_state.edit_tags,
+            st.session_state.get("edit_suggested"),  # None: no suggestion this edit, keep stored
+        )
     except ValueError:
         st.session_state.edit_error = "Answer at least one question to save."
         return
-    st.session_state.editing = None
+    cancel_edit()
     st.session_state.flash = f"Updated your entry for {entry['entry_date']}."
 
 
@@ -212,26 +257,33 @@ with past:
             st.write(f"Date: {format_date(entry['entry_date'])}")
             with st.form(f"edit_{entry['id']}", enter_to_submit=False):
                 for i, item in enumerate(entry["answers"]):
-                    st.text_area(item["question"], value=item["answer"], key=f"edit_answer_{i}")
-                st.text_input(
-                    "Tags (comma-separated)", value=", ".join(entry["tags"]), key="edit_tags"
-                )
+                    st.text_area(item["question"], key=f"edit_answer_{i}")
+                st.text_input("Tags (comma-separated)", key="edit_tags")
                 st.form_submit_button(
                     "Save changes", key="save_changes", on_click=save_edit, args=(entry,)
                 )
                 st.form_submit_button("Cancel", key="cancel_edit", on_click=cancel_edit)
+                st.form_submit_button(
+                    "Suggest tags",
+                    key="edit_suggest",
+                    on_click=suggest_edit_tags,
+                    args=(entry,),
+                    disabled=not tagger.is_configured(),
+                )
             if "edit_error" in st.session_state:
                 st.warning(st.session_state.pop("edit_error"))
+            show_tag_notes("edit_", tagger.is_configured())
         else:
             for item in entry["answers"]:
                 st.write(item["question"])
                 with st.container(border=True):
                     st.write(item["answer"].strip() or "No answer")
-            st.write("Tags: " + (", ".join(entry["tags"]) or "No tags"))
+            shown = [t + (" (suggested)" if src == "suggested" else "") for t, src in tag_sources(entry)]
+            st.write("Tags: " + (", ".join(shown) or "No tags"))
             if st.session_state.get("deleting") == entry["id"]:
                 st.warning(f"Delete your entry for {entry['entry_date']}? This can't be undone.")
                 st.button("Yes, delete", key="confirm_delete", on_click=confirm_delete, args=(entry,))
                 st.button("Cancel", key="cancel_delete", on_click=cancel_delete)
             else:
-                st.button("Edit", key="edit", on_click=start_edit, args=(entry["id"],))
+                st.button("Edit", key="edit", on_click=start_edit, args=(entry,))
                 st.button("Delete", key="delete", on_click=start_delete, args=(entry["id"],))
