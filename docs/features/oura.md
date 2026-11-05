@@ -18,23 +18,24 @@ Covered by `test_callback_with_bad_state_saves_nothing`, `test_unknown_state_ref
 
 Callback path: `curl localhost:8501/callback/?code=fake&state=fake` returns `301 Location: /callback?code=fake&state=fake`, which then loads the app (200). Streamlit drops the trailing slash but keeps the query, so the app still reads `code` and `state`. The token exchange sends the registered `http://localhost:8501/callback/` exactly.
 
-Pending: Ava opens that URL in the running app, screenshots "Sign-in expired or didn't match. Try Connect again.", and shows `oura_connection` still empty.
+Done by Ava on 2026-11-05 in the running app: the message "Sign-in expired or didn't match. Try Connect again." appeared and `oura_connection` stayed empty.
 
 ### Check 3 (AC5): cancelled
 
 Covered by `test_callback_cancelled`.
 
-Pending: Ava opens `http://localhost:8501/callback/?error=access_denied` and screenshots "Oura connection was cancelled."
+Done by Ava on 2026-11-05: `http://localhost:8501/callback/?error=access_denied` showed "Oura connection was cancelled."
 
 ### Check 4 (AC2, AC3, AC6): real sign-in and disconnect
 
 Covered by `test_authorize_url_asks_for_daily_only_with_s256`, `test_finish_sign_in_exchanges_code`, `test_callback_saves_connection`, `test_disconnect_removes_tokens`, and `test_disconnect_deletes_tokens_even_if_revoke_fails`.
 
-Pending (now possible, since the app is approved):
-- Click "Connect Oura". Screenshot Oura's consent page, which should list daily summaries only.
-- Approve. Screenshot "Connected to Oura."
-- Show one row in `oura_connection`, with only `id`, `scope`, `expires_at`, and `connected_at` visible. Hide the token columns.
-- Click Disconnect. Screenshot "Disconnected from Oura." and the empty table.
+Done by Ava on 2026-11-05 with the real Oura sign-in (screenshots kept out of the repo, token columns hidden):
+- Oura's consent page asked for daily summaries only.
+- After approving, Patterns showed "Connected to Oura." and one row appeared in `oura_connection`.
+- Disconnect showed "Disconnected from Oura." and the table was empty again.
+
+Migration `0003_oura_connection.sql` applied in Supabase.
 
 Decided: revoke uses GET with the token as a query parameter, because that is the form Oura's docs give (`/oauth/revoke?access_token=...`). The issue said POST. Revoke failures are ignored, so our copy of the tokens is always deleted.
 
@@ -42,4 +43,4 @@ Decided: revoke uses GET with the token as a query parameter, because that is th
 
 `pytest`: 53 passed (20 new). `requests` is mocked in every Oura test; Supabase is the in-memory fake or a `MagicMock`. Token errors carry only the HTTP status, never the code, tokens, or response body (`test_token_error_never_includes_code_or_body`). `test_callback_saves_connection` checks the token never appears on the page.
 
-`streamlit run app.py --server.headless true` starts, `/_stcore/health` returns `ok`, and the server log has no errors.
+`streamlit run app.py --server.headless true` starts, `/_stcore/health` returns `ok`, and the server log has no errors. Rerun 2026-11-05: 53 passed; the server log from Ava's click-through has no errors and no tokens.
