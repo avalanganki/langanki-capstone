@@ -85,7 +85,7 @@ Done by Ava on 2026-11-05: `0005_entry_suggested_tags.sql` applied in Supabase, 
 - `test_removed_tag_stays_removed_on_later_edit`: no automatic re-suggest, and the stored suggestion is kept (AC2).
 - `test_edit_suggest_disabled_when_not_configured`
 
-`pytest`: 126 passed (13 new). Claude is never called. The running app's `/_stcore/health` returns `ok` and the server log has no errors.
+`pytest`: 126 passed (13 new). Claude is never called. The running app's `/_stcore/health` returns `ok`. Correction 2026-11-05: the log checked was from a second, idle server Claude started on port 8502. Ava's click-through ran on her own server on port 8501, whose log wasn't checked. The `ok` health check did reach 8501.
 
 ### Check 3: running app
 
@@ -128,7 +128,7 @@ The order of known tags differs from the expected list in some lines; matching c
 
 ### Check 3: privacy
 
-The Streamlit server log has no answer text (checked for synthetic words like "drained", "sauna", "coffee") and no errors. Nothing in `tagger.py` or the script logs answers or responses; the script prints only the synthetic cases and token totals.
+Pending: Ava checks the terminal running her app on port 8501 for answer text (try searching for "drained", "sauna", "coffee") and errors. Correction 2026-11-05: the log checked was from a second, idle server Claude started on port 8502. Ava's click-through ran on her own server on port 8501, whose log wasn't checked. The `ok` health check did reach 8501. Nothing in `tagger.py` or the script logs answers or responses; the script prints only the synthetic cases and token totals.
 
 ### Check 2 (AC5): Streamlit Cloud
 

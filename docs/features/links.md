@@ -29,7 +29,7 @@ Decided while building:
 - `test_link_follows_edits_and_refresh`: a newly fetched night appears without re-saving the entry (AC6).
 - Each app test also asserts `tagger.suggest_tags` is never called while viewing entries.
 
-`pytest`: 144 passed (17 new). The running app's `/_stcore/health` returns `ok`; the server log has no errors.
+`pytest`: 144 passed (17 new). The running app's `/_stcore/health` returns `ok`. Ava's server on port 8501 was serving this branch's code; its log was not checked.
 
 ### Check 2: running app, connected, real data
 
