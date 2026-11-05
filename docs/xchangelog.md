@@ -19,3 +19,7 @@ Completed items moved from `docs/todo.md`.
 - [x] #7 US03 Connect: sign in with Oura, store tokens, disconnect. Real sign-in checked by Ava and merged 2026-11-05. Evidence: `docs/features/oura.md`
 - [x] #8 US03 Fetch: pull daily sleep score, readiness, and average HRV into `nights`. Merged 2026-11-05. Evidence: `docs/features/oura.md`
 - [x] #9 US03 Show: Tonight tab uses stored Oura nights when connected, sample nights otherwise. Merged 2026-11-05. Evidence: `docs/features/oura.md`
+
+## v0.4.0
+
+- [x] #11 US04 Suggest: Claude suggests tags from all answers, reusing known tags. Merged 2026-11-05. Evidence: `docs/features/tags.md`

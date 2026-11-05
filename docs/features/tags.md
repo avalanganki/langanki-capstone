@@ -48,8 +48,8 @@ The full accuracy and cost check is #13.
 
 ### Check 2: running app with no key
 
-Pending: Ava removes or blanks `ANTHROPIC_API_KEY` in `.env`, restarts the app, and screenshots the disabled "Suggest tags" button and "Tag suggestions are off (no Claude API key)." Then she restores the key.
+Done by Ava on 2026-11-05: with no key, "Suggest tags" is disabled and the page shows "Tag suggestions are off (no Claude API key)." The key was restored afterwards.
 
 ### Check 3: running app with a key
 
-Pending: Ava types synthetic answers (not real journal text), clicks "Suggest tags", and screenshots the filled Tags box and any "New tags" caption. Then she clicks Save and confirms the entry saved with those tags.
+Done by Ava on 2026-11-05 with synthetic answers: "Suggest tags" filled the Tags box (with the "New tags" caption when a tag was new), and Save stored the entry with those tags. Screenshots kept out of the repo.
