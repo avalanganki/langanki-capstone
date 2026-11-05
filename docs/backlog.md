@@ -47,7 +47,7 @@ Decisions (2026-11-05): Ava chose tags before score-aware questions (FR-2). Clau
 
 - Suggest: "Suggest tags" button on Tonight. Claude reuses known tags, new tags are flagged, the output is structured, a privacy caption sits under the form, and errors fall back to typing. Issue #11, done, see `docs/xchangelog.md`.
 - Source: store which tags Claude suggested vs. Ava typed, mark them in Past entries, and Suggest on edit. Issue #12, done, see `docs/xchangelog.md`.
-- Verify: 12 synthetic nights against real Claude, including variant merging and a question-dependent answer (at least 10 match), cost under one cent a night, and the Streamlit Cloud secret. Issue #13, see `docs/todo.md`.
+- Verify: 12 synthetic nights against real Claude, including variant merging and a question-dependent answer (at least 10 match), cost under one cent a night, and the Streamlit Cloud secret. Issue #13, done, see `docs/xchangelog.md`.
 
 ## Unscheduled
 

@@ -132,4 +132,4 @@ The Streamlit server log has no answer text (checked for synthetic words like "d
 
 ### Check 2 (AC5): Streamlit Cloud
 
-Pending: Ava adds `ANTHROPIC_API_KEY` to the app's secrets on Streamlit Community Cloud. Then, on the live URL with synthetic answers, she clicks "Suggest tags" and screenshots the filled Tags box. The live app also needs `0005_entry_suggested_tags.sql`; if its secrets point at the same Supabase project, that is already done.
+Done by Ava on 2026-11-05: `ANTHROPIC_API_KEY` added to the Streamlit Community Cloud secrets, and "Suggest tags" worked on the live URL with synthetic answers. Screenshot kept out of the repo.

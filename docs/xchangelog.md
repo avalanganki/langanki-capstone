@@ -24,3 +24,4 @@ Completed items moved from `docs/todo.md`.
 
 - [x] #11 US04 Suggest: Claude suggests tags from all answers, reusing known tags. Merged 2026-11-05. Evidence: `docs/features/tags.md`
 - [x] #12 US04 Source: remember suggested vs typed tags; suggest on edit. Merged 2026-11-05. Evidence: `docs/features/tags.md`
+- [x] #13 US04 Verify: real Claude tag accuracy and cost. 12 of 12 synthetic nights matched, about $0.004 a night, and it works on Streamlit Cloud. Merged 2026-11-05. Evidence: `docs/features/tags.md`. Closes out US04 Claude tags.
