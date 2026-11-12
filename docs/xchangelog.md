@@ -32,3 +32,4 @@ Completed items moved from `docs/todo.md`.
 - [x] #17 US06 API skeleton: FastAPI with Supabase login check for Ava only. Merged 2026-11-05. Evidence: `docs/features/backend.md`
 - [x] #18 US06 Frontend skeleton: Vite React app, Patterns theme, Supabase sign-in gated by `/api/me`. Merged 2026-11-12. Ava signed in (by password via #20, Outlook down). Still to do: sign-ups-off screenshot and a magic-link retest. Evidence: `docs/features/web.md`
 - [x] #19 US06 Entry and tag routes: entries CRUD and Suggest tags in the API, with Streamlit's messages; no journal text in errors or logs. Merged 2026-11-12. Evidence: `docs/features/backend.md`
+- [x] #20 US06 Password sign-in: email and password beside the magic link, plus `scripts/set_password.py`; sign-ups still off. Merged 2026-11-12. Ava signed in and checked a wrong password (screenshots waived by Ava). Evidence: `docs/features/web.md`
