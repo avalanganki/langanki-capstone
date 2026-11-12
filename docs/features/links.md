@@ -33,7 +33,7 @@ Decided while building:
 
 ### Check 2: running app, connected, real data
 
-Pending: blocked on 2026-11-12, when Ava couldn't complete sign-in on Oura's website (appears to be on Oura's side). Ava opens a few entries in Past entries and describes, in words only, which messages appear (for example "3 entries linked, 1 not fetched yet"). No screenshot of real scores.
+Done by Ava on 2026-11-12: she reconnected to Oura (after an earlier failed attempt on Oura's sign-in page), refreshed, and opened a past entry. It shows "Next night" with the following day's date and that night's scores. Ava described it in words; no values or screenshots were recorded. The no-data, no-ring-data, and not-fetched states are covered by tests with synthetic data.
 
 ### Check 3: running app, disconnected
 
