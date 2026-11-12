@@ -62,3 +62,41 @@ Pending: screenshot of the Supabase "Allow new users to sign up" setting turned 
 - `App.test.tsx`: signed out shows SignIn and calls no API; `/api/me` OK shows "Tonight" and "Signed in."; 403 shows the not-allowed message and signs out; any other error shows the API's message; Sign out returns to the sign-in screen.
 
 `npm run build` and `npm run lint` pass with no errors or warnings. `pytest -q`: 149 passed.
+
+## Password sign-in (issue #20)
+
+Added on 2026-11-12 by Ava's decision: Outlook was down, so the magic-link email couldn't arrive. The magic link stays; a password is added beside it. Sign-ups stay off.
+
+What it does:
+- The sign-in screen has a "Use a password instead" button. It swaps to Email, Password, and "Sign in"; "Use a sign-in link instead" swaps back.
+- "Sign in" calls `signInWithPassword`, which never creates an account. Once signed in, `App` checks `/api/me` exactly as with the link, so any other account is refused and signed out.
+- A wrong email or password shows "Couldn't sign in. Check your email and password." It never says which was wrong and never shows Supabase's own message. The password field is cleared after every attempt.
+- `scripts/set_password.py` sets the password on the `ALLOWED_USER_ID` account with the secret key, with no email. It asks twice with hidden input, needs 12 or more characters, and prints only "Password set." or a plain error.
+
+Decided while building:
+- The script also marks the account's email as confirmed. Otherwise an invited user who never opened the email can't sign in with a password, which is the exact situation this issue is for.
+- The Email field uses `autocomplete="username"` on the password form, so password managers pair it with the password.
+
+### Setup (Ava, once)
+
+In a terminal at the repo root: `.venv/bin/python scripts/set_password.py`. Skip this if the user was created in the dashboard with a password already.
+
+### Check 1 (AC1, AC2): sign in with a password
+
+AC1 done by Ava on 2026-11-12: ran `scripts/set_password.py`, then signed in with her password on http://localhost:5173 and saw the Tonight header with "Signed in."
+
+AC2 done by Ava on 2026-11-12: a wrong password showed the error and stayed signed out, and the right password signed her in. Ava waived the screenshots.
+
+Done by Claude on 2026-11-12: the running dev server shows "Use a password instead" under the sign-in link form at 360px wide.
+
+### Check 2 (AC3, AC6): tests
+
+`npm test`: 25 passed (8 new).
+- `SignIn.test.tsx`: `switches to the password form and back`; `is disabled until both fields are filled`; `signs in with the email and password and never sends a link`; `shows the generic message on error, without Supabase text, and clears the password`; `shows the generic message when the request throws`; `never logs the email or password`. The five magic-link tests from #18 still pass (AC4).
+- `App.test.tsx`: `a password sign-in for an account that is not allowed is signed out` (AC3); `a password sign-in for my account shows the Tonight header`.
+
+`pytest -q`: 155 passed on this branch (6 new, in `tests/test_set_password.py`): sets the password on `ALLOWED_USER_ID`; refuses a mismatch, a short password, or a blank `ALLOWED_USER_ID` without calling Supabase; and a Supabase error or missing settings shows the plain message with no password or ID. `npm run build` and `npm run lint` are clean.
+
+### Check 3 (AC5): no secrets
+
+Tests use only synthetic passwords. The script never prints the password, email, ID, or keys.

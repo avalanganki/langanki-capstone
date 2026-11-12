@@ -4,14 +4,24 @@ import { NightSky } from './NightSky'
 
 export const CHECK_EMAIL = 'Check your email for a sign-in link.'
 export const SEND_FAILED = "Couldn't send the link. Try again."
+export const PASSWORD_FAILED = "Couldn't sign in. Check your email and password."
 
+type Mode = 'link' | 'password'
 type Status = 'idle' | 'sending' | 'sent' | 'error'
 
 export function SignIn({ notice }: { notice?: string }) {
+  const [mode, setMode] = useState<Mode>('link')
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [status, setStatus] = useState<Status>('idle')
 
-  async function send(event: FormEvent) {
+  function switchTo(next: Mode) {
+    setMode(next)
+    setPassword('')
+    setStatus('idle')
+  }
+
+  async function sendLink(event: FormEvent) {
     event.preventDefault()
     if (!email.trim()) return
     setStatus('sending')
@@ -32,6 +42,21 @@ export function SignIn({ notice }: { notice?: string }) {
     }
   }
 
+  async function signInWithPassword(event: FormEvent) {
+    event.preventDefault()
+    if (!email.trim() || !password) return
+    setStatus('sending')
+    const attempt = password
+    setPassword('') // cleared after every attempt
+    try {
+      // Never creates an account. On success App sees the new session and checks /api/me.
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: attempt })
+      setStatus(error ? 'error' : 'idle')
+    } catch {
+      setStatus('error')
+    }
+  }
+
   return (
     <>
       <NightSky date="" title="Patterns" />
@@ -42,12 +67,15 @@ export function SignIn({ notice }: { notice?: string }) {
           </p>
         )}
         <p className="prompt">Sign in to start tonight's reflection.</p>
-        {status === 'sent' ? (
+
+        {mode === 'link' && status === 'sent' && (
           <p className="note fade-in" role="status">
             {CHECK_EMAIL}
           </p>
-        ) : (
-          <form onSubmit={send} noValidate>
+        )}
+
+        {mode === 'link' && status !== 'sent' && (
+          <form onSubmit={sendLink} noValidate>
             <label htmlFor="email">Email</label>
             <input
               id="email"
@@ -69,6 +97,52 @@ export function SignIn({ notice }: { notice?: string }) {
             )}
           </form>
         )}
+
+        {mode === 'password' && (
+          <form onSubmit={signInWithPassword} noValidate>
+            <label htmlFor="email">Email</label>
+            <input
+              id="email"
+              className="field"
+              type="email"
+              autoComplete="username"
+              inputMode="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              className="field"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <button
+              className="button"
+              type="submit"
+              disabled={status === 'sending' || !email.trim() || !password}
+            >
+              Sign in
+            </button>
+            {status === 'error' && (
+              <p className="error" role="alert">
+                {PASSWORD_FAILED}
+              </p>
+            )}
+          </form>
+        )}
+
+        <button
+          className="button quiet"
+          type="button"
+          onClick={() => switchTo(mode === 'link' ? 'password' : 'link')}
+        >
+          {mode === 'link' ? 'Use a password instead' : 'Use a sign-in link instead'}
+        </button>
       </main>
     </>
   )
