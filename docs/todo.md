@@ -12,6 +12,6 @@ Items moved from `docs/backlog.md` that we are working on now.
 
 ## v0.6.0 US06 New UI
 
-- [ ] #18 Frontend skeleton: Vite React app, Patterns theme, magic-link sign-in
+- [ ] #18 Frontend skeleton: Vite React app, Patterns theme, magic-link sign-in. Built on `dev/18-web-skeleton`; waiting on Ava's setup and sign-in check (see `docs/features/web.md`, Setup and Checks 1 and 2).
 - [ ] #19 Entry and tag routes: entries CRUD and Suggest tags in the API
 - [ ] #20 Password sign-in: email and password beside the magic link
