@@ -1,21 +1,20 @@
-"""Patterns API (issue #17). Holds every secret; the browser only ever sends its Supabase access token.
+"""Patterns API (issues #17, #19). Holds every secret; the browser only ever sends its Supabase access token.
 
 Never log tokens, user IDs, emails, journal text, or health values.
 Oura data never goes to Claude or any AI model (Oura API agreement Sec. 4(d)).
 """
 
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from supabase_auth.errors import AuthError
+from fastapi.responses import JSONResponse
 
-import config
-import db
+from api import entries_routes, tags_routes
+from api.auth import CHECK_FAILED, NOT_ALLOWED, SIGN_IN_REQUIRED, require_user  # noqa: F401
 
 DEV_ORIGINS = ["http://localhost:5173"]  # Vite dev server; the deploy issue adds the live origin
 
-SIGN_IN_REQUIRED = "Sign in required."
-NOT_ALLOWED = "This account can't use Patterns."
-CHECK_FAILED = "Couldn't check sign-in. Try again."
+INVALID_REQUEST = "Invalid request."
 
 app = FastAPI(title="Patterns API")
 app.add_middleware(
@@ -26,25 +25,10 @@ app.add_middleware(
 )
 
 
-def require_user(authorization: str = Header(default="")):
-    """Return the signed-in user's ID if it's Ava's account; otherwise refuse."""
-    scheme, _, token = authorization.partition(" ")
-    if scheme.lower() != "bearer" or not token.strip():
-        raise HTTPException(status_code=401, detail=SIGN_IN_REQUIRED)
-    try:
-        response = db.get_client().auth.get_user(token.strip())
-    except AuthError:
-        raise HTTPException(status_code=401, detail=SIGN_IN_REQUIRED) from None
-    except Exception:
-        # Supabase unreachable or misconfigured: not the user's fault, so not a 401.
-        raise HTTPException(status_code=503, detail=CHECK_FAILED) from None
-    user = getattr(response, "user", None)
-    if user is None:
-        raise HTTPException(status_code=401, detail=SIGN_IN_REQUIRED)
-    allowed = config.get("ALLOWED_USER_ID")
-    if not allowed or str(user.id) != allowed:
-        raise HTTPException(status_code=403, detail=NOT_ALLOWED)
-    return str(user.id)
+@app.exception_handler(RequestValidationError)
+def invalid_request(request, exc):
+    # FastAPI's default 422 echoes the request body back, which could include journal text.
+    return JSONResponse(status_code=422, content={"detail": INVALID_REQUEST})
 
 
 @app.get("/api/health")
@@ -56,3 +40,7 @@ def health():
 def me(user_id: str = Depends(require_user)):
     # Never return email or IDs: the frontend only needs to know the sign-in works.
     return {"signed_in": True}
+
+
+app.include_router(entries_routes.router)
+app.include_router(tags_routes.router)
