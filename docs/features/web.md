@@ -38,7 +38,7 @@ Done by Claude on 2026-11-12, without real Supabase: with `npm run dev` and the 
 
 ### Check 2 (AC3): sign-ups off
 
-Sign-ups turned off by Ava in the Supabase dashboard during setup (setup step 2). The API already refuses any account but `ALLOWED_USER_ID` (403, issue #17).
+Pending: screenshot of the Supabase "Allow new users to sign up" setting turned off (Ava hasn't confirmed this yet). The API already refuses any account but `ALLOWED_USER_ID` (403, issue #17).
 
 ### Check 3 (AC6): no secrets committed
 
