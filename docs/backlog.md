@@ -81,6 +81,9 @@ Planned pieces (each becomes an issue when moved to `docs/todo.md`):
 
 ## Unscheduled
 
+### Retest magic-link sign-in
+Found while closing US06 Frontend skeleton (#18), 2026-11-12. Outlook was down, so Ava signed in by password (#20) and the magic-link email was never received end to end. Its code is covered by tests. Once email works, send a link from http://localhost:5173, open it, and confirm the Tonight header with "Signed in." Record the result in `docs/features/web.md`. Labels: v0.6.0, US06.
+
 ### Question generation: don't ask about screen use
 Found in `docs/notes.md` (Oct 1, item 3). Ava answers on a screen, so a question like "what time did you stop looking at screens?" doesn't work. The Claude prompt for nightly questions should steer away from screen-time questions. Pick up with the question-generation story (FR-2).
 
