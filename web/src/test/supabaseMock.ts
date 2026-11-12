@@ -16,6 +16,11 @@ export const auth = {
     return { data: { subscription: { unsubscribe: () => (listeners = listeners.filter((l) => l !== cb)) } } }
   }),
   signInWithOtp: vi.fn(async (_args: unknown) => ({ data: {}, error: null as unknown })),
+  // Succeeds by default and starts a session, like the real client.
+  signInWithPassword: vi.fn(async (_args: unknown) => {
+    setSession(fakeSession)
+    return { data: { session: fakeSession as unknown }, error: null as unknown }
+  }),
   signOut: vi.fn(async () => {
     setSession(null)
     return { error: null }

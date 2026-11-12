@@ -65,4 +65,32 @@ describe('App', () => {
     expect(auth.signOut).toHaveBeenCalled()
     expect(await screen.findByRole('button', { name: 'Send sign-in link' })).toBeInTheDocument()
   })
+
+  it('a password sign-in for an account that is not allowed is signed out', async () => {
+    resetSupabase(null)
+    fetchMock.mockResolvedValue(jsonResponse(403, { detail: "This account can't use Patterns." }))
+    render(<App />)
+    await userEvent.click(await screen.findByRole('button', { name: 'Use a password instead' }))
+    await userEvent.type(screen.getByLabelText('Email'), 'other@example.invalid')
+    await userEvent.type(screen.getByLabelText('Password'), 'synthetic-pass-123')
+    await userEvent.click(screen.getByRole('button', { name: 'Sign in' }))
+
+    expect(await screen.findByText("This account can't use Patterns.")).toBeInTheDocument()
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/me')
+    expect(auth.signOut).toHaveBeenCalled()
+    expect(screen.queryByText('Signed in.')).not.toBeInTheDocument()
+  })
+
+  it('a password sign-in for my account shows the Tonight header', async () => {
+    resetSupabase(null)
+    fetchMock.mockResolvedValue(jsonResponse(200, { signed_in: true }))
+    render(<App />)
+    await userEvent.click(await screen.findByRole('button', { name: 'Use a password instead' }))
+    await userEvent.type(screen.getByLabelText('Email'), 'someone@example.invalid')
+    await userEvent.type(screen.getByLabelText('Password'), 'synthetic-pass-123')
+    await userEvent.click(screen.getByRole('button', { name: 'Sign in' }))
+
+    expect(await screen.findByText('Signed in.')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Tonight' })).toBeInTheDocument()
+  })
 })
