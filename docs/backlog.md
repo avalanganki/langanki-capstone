@@ -71,6 +71,7 @@ Planned pieces (each becomes an issue when moved to `docs/todo.md`):
 - API skeleton (issue #17, done, see `docs/xchangelog.md`): FastAPI app, Supabase access-token check that allows only Ava's account, health route, and pytest with FastAPI's test client.
 - API routes: entries (create, list, get, update, delete) and Suggest tags are issue #19 (see `docs/todo.md`); then nights (display and refresh), entry links, and Oura connect, callback, and disconnect.
 - Frontend skeleton (issue #18, see `docs/todo.md`; magic-link sign-in chosen by Ava 2026-11-05, sign-ups off; also creates Ava's Supabase Auth user and sets `ALLOWED_USER_ID`): Vite + React + TypeScript, theme tokens from `themes.md` (night and cream palettes, Fraunces and Nunito Sans), Supabase sign-in, an API client, and Vitest.
+- Password sign-in (issue #20, see `docs/todo.md`; added by Ava 2026-11-12 because Outlook was down and the magic link couldn't arrive): email and password beside the magic link, sign-ups still off, plus `scripts/set_password.py` to set the password without email.
 - Tonight screen: night-sky header, score rings (sample nights labeled as sample), the three questions, Suggest tags with "New tags" and the privacy line, tag chips, and Save.
 - Past entries screen: list, open, edit, delete, "(suggested)" marks, the "Next night" line, and the "Evening before" tags beside each night (absorbs #15 if not built in Streamlit).
 - Oura settings: connect, refresh with "Last updated", and disconnect.
