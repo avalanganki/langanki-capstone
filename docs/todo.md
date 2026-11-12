@@ -13,4 +13,4 @@ Items moved from `docs/backlog.md` that we are working on now.
 ## v0.6.0 US06 New UI
 
 - [ ] #19 Entry and tag routes: entries CRUD and Suggest tags in the API
-- [ ] #20 Password sign-in: email and password beside the magic link
+- [ ] #20 Password sign-in: email and password beside the magic link. Built on `dev/20-password-sign-in`; Ava signed in with her password 2026-11-12; waiting on the wrong-password check and screenshots (see `docs/features/web.md`, Password sign-in).

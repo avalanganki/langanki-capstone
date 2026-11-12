@@ -83,7 +83,9 @@ In a terminal at the repo root: `.venv/bin/python scripts/set_password.py`. Skip
 
 ### Check 1 (AC1, AC2): sign in with a password
 
-Pending: Ava signs in with her password on http://localhost:5173, and tries one wrong password. Screenshot the error and the signed-in header, with no email visible.
+AC1 done by Ava on 2026-11-12: ran `scripts/set_password.py`, then signed in with her password on http://localhost:5173 and saw the Tonight header with "Signed in."
+
+Pending (AC2): one wrong password, with a screenshot of "Couldn't sign in. Check your email and password." and of the signed-in header, with no email visible.
 
 Done by Claude on 2026-11-12: the running dev server shows "Use a password instead" under the sign-in link form at 360px wide.
 
