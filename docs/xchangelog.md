@@ -19,6 +19,7 @@ Completed items moved from `docs/todo.md`.
 - [x] #7 US03 Connect: sign in with Oura, store tokens, disconnect. Real sign-in checked by Ava and merged 2026-11-05. Evidence: `docs/features/oura.md`
 - [x] #8 US03 Fetch: pull daily sleep score, readiness, and average HRV into `nights`. Merged 2026-11-05. Evidence: `docs/features/oura.md`
 - [x] #9 US03 Show: Tonight tab uses stored Oura nights when connected, sample nights otherwise. Merged 2026-11-05. Evidence: `docs/features/oura.md`
+- [x] #10 US03 Verify: real Oura checks. Done 2026-11-12: average HRV is present with the `daily` scope, so no extra scope is needed; an expired sign-in renews itself; Disconnect empties `oura_connection`. The live Streamlit check was dropped (no live Streamlit, Ava 2026-11-05). Evidence: `docs/features/oura.md`. Closes out US03 Connect Oura.
 
 ## v0.4.0
 

@@ -125,7 +125,7 @@ Done under #7 (see Connect, Check 4): Oura's consent page asked for daily summar
 
 Done: "Refresh Oura data" saved 14 nights, and the `nights` table holds 14 rows.
 
-Pending: whether average HRV came back with the `daily` scope (values present, or "No data" in the HRV column).
+Done by Ava on 2026-11-12: average HRV is present with the `daily` scope, so no extra Oura scope is needed. The scope stays `daily` only; the privacy policy, app registration, and CLAUDE.md need no change.
 
 ### Check 3 (AC3): Tonight
 
@@ -133,14 +133,20 @@ Done: Tonight shows the nights labeled "From your Oura ring." with the "Based on
 
 ### Check 4 (AC4): expired sign-in renews itself
 
-Pending.
+Done by Ava on 2026-11-12: after reconnecting, she set `expires_at` to an hour in the past (`update oura_connection set expires_at = now() - interval '1 hour';`) and clicked "Refresh Oura data". It refreshed without asking her to connect again, and `select expires_at > now() as renewed from oura_connection;` returned `true`. That query returns only a true/false value, never the token.
 
 ### Check 5 (AC5): disconnect
 
 Done: after Disconnect, Patterns no longer appears in Ava's Oura connected apps.
 
-Pending: confirm `oura_connection` is empty.
+Done by Ava on 2026-11-12: after Disconnect, `select count(*) from oura_connection;` returned 0.
 
 ### Check 6 (AC6): Streamlit Cloud
 
-Pending: add `https://<app>.streamlit.app/callback/` as a second redirect URI in the Oura app, put the Oura settings in the app's secrets, and connect on the live URL.
+Dropped on 2026-11-05 by Ava's decision: Streamlit is not deployed live. The live redirect URI is registered in the US06 deploy issue instead.
+
+### Check 7: privacy
+
+Done by Claude on 2026-11-12. During these checks, the Streamlit log (14 lines) had zero matches for `access_token`, `refresh_token`, `Bearer`, `code=`, `state=`, `sleep_score`, `readiness`, `hrv`, or `Traceback`. Only the match counts were printed, never the log lines. `git status` shows no `.env` or exports. Claude never read the `nights` or `oura_connection` tables: Ava ran every query and reported the results in words.
+
+`pytest -q` on `main`: 191 passed. No code fixes were needed, so there is no `dev/10-oura-verify` branch.
