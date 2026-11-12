@@ -33,8 +33,8 @@ Decided while building:
 
 ### Check 2: running app, connected, real data
 
-Pending: Ava opens a few entries in Past entries and describes, in words only, which messages appear (for example "3 entries linked, 1 not fetched yet"). No screenshot of real scores.
+Pending: blocked on 2026-11-12, when Ava couldn't complete sign-in on Oura's website (appears to be on Oura's side). Ava opens a few entries in Past entries and describes, in words only, which messages appear (for example "3 entries linked, 1 not fetched yet"). No screenshot of real scores.
 
 ### Check 3: running app, disconnected
 
-Pending: Ava disconnects (or checks before connecting) and screenshots an entry showing "Connect Oura to see the next night's scores."
+Done by Ava on 2026-11-12, disconnected after the #10 checks: an entry in Past entries shows "Connect Oura to see the next night's scores." Ava confirmed it in words; no screenshot.
