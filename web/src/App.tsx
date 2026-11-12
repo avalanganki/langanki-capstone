@@ -5,6 +5,7 @@ import { isConfigured, supabase } from './supabase'
 import { formatToday } from './dates'
 import { NightSky } from './screens/NightSky'
 import { SignIn } from './screens/SignIn'
+import { Tonight } from './screens/Tonight'
 
 export const NOT_ALLOWED = "This account can't use Patterns."
 export const NOT_SET_UP = "Sign-in isn't set up yet. Add the Supabase settings to web/.env.local."
@@ -78,15 +79,12 @@ export default function App() {
     return <SignIn notice={refused ? NOT_ALLOWED : undefined} />
   }
 
+  if (check.state === 'ok') return <Tonight />
+
   return (
     <>
       <NightSky date={formatToday()} title="Tonight" />
       <main className="content">
-        {check.state === 'ok' && (
-          <p className="note fade-in" role="status">
-            Signed in.
-          </p>
-        )}
         {check.state === 'error' && (
           <p className="error" role="alert">
             {check.message}

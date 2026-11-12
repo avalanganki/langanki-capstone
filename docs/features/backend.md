@@ -131,3 +131,27 @@ Decided while building:
 Done by Claude on 2026-11-12: `uvicorn api.main:app --port 8000` started without error. The OpenAPI route list shows `GET /api/health`, `GET /api/me`, `GET /api/questions`, `GET /api/entries`, `POST /api/entries`, `GET`, `PUT`, and `DELETE /api/entries/{entry_id}`, and `POST /api/tags/suggest`. Without sign-in, all seven new routes return 401 "Sign in required." The server log shows only method, path, and status.
 
 Done by Ava on 2026-11-12: opened the API docs page (served from `dev/19-entry-routes` on port 8001, because 8000 was running the #20 branch) and screenshotted the route list: all nine routes and their request schemas (`NewEntry`, `EntryChanges`, `Pair`, `SuggestRequest`), with no data shown. Screenshot reviewed in session, not committed.
+
+## Nights route (issue #21)
+
+Built on 2026-11-12 for the Tonight screen. Read-only; refresh, connect, and disconnect come in the Oura settings issue.
+
+What it does:
+- `GET /api/nights` returns `{"source": "oura" | "sample", "nights": [{"date", "sleep_score", "readiness", "avg_hrv"}], "counted": N}`, from `nights.load_display_nights` (the last 14 stored nights when connected, the sample nights otherwise), oldest first. A missing value stays `null`, never 0. `counted` is the number of nights with at least one value.
+- `GET /api/tags/status` returns `{"on": true | false}`, so the screen can hide Suggest tags when there's no Claude key.
+- Both need sign-in. A database error is 503 "Couldn't reach the database. Try again." with nothing logged but the error type.
+- Oura values go only to the browser. These routes never call the tagger or Claude.
+
+### Check: tests
+
+`tests/test_api_nights.py` (Supabase faked, synthetic values only):
+- `test_needs_sign_in`, for both routes
+- `test_sample_when_not_connected`: stored nights are never shown without a connection
+- `test_oura_nights_oldest_first_when_connected`
+- `test_missing_values_stay_null_and_empty_nights_are_not_counted`
+- `test_connected_with_no_nights_falls_back_to_sample`
+- `test_database_error_is_503_without_values`
+- `test_nights_never_logs_values_or_calls_claude`
+- `test_tags_status`, on and off
+
+`pytest -q`: 218 passed (10 new). With the API running, both routes return 401 "Sign in required." without a token.

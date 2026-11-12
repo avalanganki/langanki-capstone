@@ -100,3 +100,42 @@ Done by Claude on 2026-11-12: the running dev server shows "Use a password inste
 ### Check 3 (AC5): no secrets
 
 Tests use only synthetic passwords. The script never prints the password, email, ID, or keys.
+
+## Tonight screen (issue #21)
+
+Built on 2026-11-12. Once the account check passes, the app shows this screen in place of the "Signed in." placeholder.
+
+What it does, top to bottom:
+- **Night-sky header** with today's date and "Tonight".
+- **Scores card** for the latest night from `/api/nights`. Readiness and Sleep are rings (fill `--rose` on a faint `--mauve` track, number inside, label below). HRV is a plain number with no ring. A missing value reads "No data" with an empty ring, never 0. Under the card: "Last night, <Mon D>." and either "From your Oura ring." or "Sample data. Not real Oura data." If the nights call fails, its message shows and the questions still work.
+- **Questions one at a time**, from `/api/questions`. Each has an answer box and "Next". A blank "Next" skips the question, and "Back" returns with the answer kept. Answered questions stay above, in serif, with the answer in a Cocoa Card or "Skipped."
+- **Tags** after the last question:
+  - Tags are pills, and tapping one removes it. "Add a tag" cleans what's typed like `parse_tags`.
+  - "Suggest tags" appears only when `/api/tags/status` is on, and adds Claude's tags after the existing ones. It names new tags ("New tags: ... Swap in an existing tag if one fits."), and the privacy line sits under it.
+  - Without a Claude key, the screen shows "Tag suggestions are off (no Claude API key)." instead.
+- **Entry date**, defaulting to today in the browser's time zone, so a missed night can still be logged.
+- **Save** posts all three answers (blank ones included), the tags, and the last suggestion as `suggested_tags`. On success it shows "Saved your entry for <Mon D>." and clears the form. On 400 or 409 it shows the API's message and keeps everything.
+- **Sign out** at the bottom.
+
+Decided while building:
+- `apiPost` shares one request function with `apiGet`. Types and helpers live outside the components (`nights.ts`, `tags.ts`, `dates.ts`), which keeps the linter clean.
+- The rings fill once over 700ms, only when `prefers-reduced-motion` isn't set.
+- Pills are 44px tall so each one is a full tap target.
+- The entry date can't be set later than today.
+- Tests use a URL-routed fake API (`src/test/fakeApi.ts`). The #18 `App` tests now look for the Tonight screen instead of "Signed in."
+
+### Check 1 (AC1 to AC6): one real check-in
+
+Pending: Ava does one check-in on http://localhost:5173 in a phone-sized window, then opens that entry in Streamlit's Past entries. Describe in words only.
+
+Done by Claude on 2026-11-12, with synthetic data on a temporary preview page (deleted afterwards): at 360px wide, the scores card, the answered questions, the wrapped tag pills, the add-tag row, the date field, and Save all fit with no sideways scroll. "No data" shows for a missing HRV.
+
+### Check 2 (AC7, AC8): tests
+
+`npm test`: 41 passed (16 new in `Tonight.test.tsx`):
+- scores: rings and HRV, with "No data" for a missing value; the sample label; a nights error still shows the questions
+- questions: one at a time with earlier answers above; a blank Next skips; Back keeps the answer; Back from tags
+- tags: add cleaned tags and remove on tap; Suggest hidden when off; the suggest body holds only the question/answer pairs, tags merge after typed ones, and new tags are named; a suggest error keeps the tags
+- save: sends all answers, tags, and `suggested_tags`, then clears; uses the chosen date; 409 keeps everything; the blank message; never logs answers, tags, or scores
+
+`npm run build` and `npm run lint` are clean. `pytest -q`: 218 passed.
