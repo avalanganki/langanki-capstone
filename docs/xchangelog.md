@@ -27,6 +27,10 @@ Completed items moved from `docs/todo.md`.
 - [x] #12 US04 Source: remember suggested vs typed tags; suggest on edit. Merged 2026-11-05. Evidence: `docs/features/tags.md`
 - [x] #13 US04 Verify: real Claude tag accuracy and cost. 12 of 12 synthetic nights matched, about $0.004 a night, and it works on Streamlit Cloud. Merged 2026-11-05. Evidence: `docs/features/tags.md`. Closes out US04 Claude tags.
 
+## v0.5.0
+
+- [x] #14 US05 Link: each entry dated D links to the night dated D+1, with scores, "No data", no-ring-data, not-fetched, and connect states; sample nights are never linked. Merged 2026-11-12. Ava checked it connected and disconnected. Evidence: `docs/features/links.md`
+
 ## v0.6.0
 
 - [x] #16 US06 Settings: one config module; backend modules no longer import Streamlit. Merged 2026-11-05. Checked locally; the live Streamlit check was dropped (no live Streamlit, Ava decision). Evidence: `docs/features/backend.md`

@@ -56,7 +56,7 @@ As Ava, I want each evening entry linked to the following night's Oura scores, a
 
 Decisions (2026-11-05): Oura's `day` is the date sleep ended, so the entry dated D links to the night dated D + 1. The link is worked out by date each time, never stored, so it stays right after a re-fetch, an edit, or a delete. Three honest states when there's no night: "No ring data for this night" (fetched, but Oura had nothing), "Not fetched from Oura yet", and "Connect Oura..." when not connected. Sample nights are never linked to real entries. App code only; nothing goes to Claude.
 
-- Link: a "Next night" line on each past entry, with linked, no-ring-data, not-fetched, and not-connected states, and a linked-night count for trends. Issue #14, see `docs/todo.md`.
+- Link: a "Next night" line on each past entry, with linked, no-ring-data, not-fetched, and not-connected states, and a linked-night count for trends. Issue #14, done, see `docs/xchangelog.md`.
 - Evening before: an "Evening before" tags column beside each night, never on sample nights. Issue #15 closed 2026-11-05 as folded into US06: built in the new UI instead of Streamlit.
 
 ## v0.6.0
