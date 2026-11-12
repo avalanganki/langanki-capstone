@@ -43,7 +43,7 @@ Decided: revoke uses GET with the token as a query parameter, because that is th
 
 `pytest`: 53 passed (20 new). `requests` is mocked in every Oura test; Supabase is the in-memory fake or a `MagicMock`. Token errors carry only the HTTP status, never the code, tokens, or response body (`test_token_error_never_includes_code_or_body`). `test_callback_saves_connection` checks the token never appears on the page.
 
-`streamlit run app.py --server.headless true` starts, `/_stcore/health` returns `ok`, and the server log has no errors. Rerun 2026-11-05: 53 passed; the server log from Ava's click-through has no errors and no tokens.
+`streamlit run app.py --server.headless true` starts, `/_stcore/health` returns `ok`, and the server log has no errors. Rerun 2026-11-05: 53 passed. Correction 2026-11-05: the log checked was from a second, idle server Claude started on port 8502. Ava's click-through ran on her own server on port 8501, whose log wasn't checked. The `ok` health check did reach 8501.
 
 ## Fetch (issue #8)
 
@@ -111,7 +111,7 @@ The real-data view is checked in #10, described in words only.
 
 `pytest`: 84 passed (7 new). Oura and Supabase are never touched: tests use the in-memory fake client.
 
-`streamlit run app.py` is running, `/_stcore/health` returns `ok`, and the server log has no errors.
+`streamlit run app.py` is running and `/_stcore/health` returns `ok`. Correction 2026-11-05: the log checked was from a second, idle server Claude started on port 8502. Ava's click-through ran on her own server on port 8501, whose log wasn't checked. The `ok` health check did reach 8501.
 
 ## Real API (issue #10)
 

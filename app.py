@@ -17,6 +17,7 @@ from entries import (
     tag_sources,
     update_entry,
 )
+import links
 from nights import has_values, load_display_nights, show_value
 
 st.title("Patterns")
@@ -171,6 +172,24 @@ with tonight:
     counted = sum(1 for n in nights if has_values(n))
     st.caption(f"Based on {counted} {'night' if counted == 1 else 'nights'}.")
 
+def next_night_line(link):
+    """The "Next night" line for one entry. Missing values read "No data", never 0."""
+    if link is None:
+        return "Connect Oura to see the next night's scores."
+    if link["status"] == links.NO_RING_DATA:
+        return "No ring data for this night."
+    if link["status"] == links.NOT_FETCHED:
+        return "Not fetched from Oura yet. Use Refresh Oura data."
+    night = link["night"]
+    d = datetime.date.fromisoformat(link["night_date"])
+    hrv = show_value(night["avg_hrv"])
+    return (
+        f"Next night ({d:%b} {d.day}): Sleep score {show_value(night['sleep_score'])}"
+        f" · Readiness {show_value(night['readiness'])}"
+        f" · HRV {hrv}{' ms' if night['avg_hrv'] is not None else ''}"
+    )
+
+
 def format_date(iso):
     d = datetime.date.fromisoformat(iso)
     return f"{d:%a, %b} {d.day}, {d.year}"
@@ -280,6 +299,7 @@ with past:
                     st.write(item["answer"].strip() or "No answer")
             shown = [t + (" (suggested)" if src == "suggested" else "") for t, src in tag_sources(entry)]
             st.write("Tags: " + (", ".join(shown) or "No tags"))
+            st.write(next_night_line(links.link_one(client, entry)))
             if st.session_state.get("deleting") == entry["id"]:
                 st.warning(f"Delete your entry for {entry['entry_date']}? This can't be undone.")
                 st.button("Yes, delete", key="confirm_delete", on_click=confirm_delete, args=(entry,))
