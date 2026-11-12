@@ -32,13 +32,13 @@ Decided while building:
 
 ### Check 1 (AC1, AC2, AC4, AC5): sign in on a phone-sized window
 
-Pending: Ava signs in on http://localhost:5173 in a phone-sized window and screenshots the sign-in screen and the signed-in header, with no email visible.
+Done by Ava on 2026-11-12: completed the Supabase setup (user added, `ALLOWED_USER_ID` set, `web/.env.local` with the publishable key), signed in on http://localhost:5173, and saw the Tonight header with "Signed in." Outlook was down, so she signed in with a password (issue #20) instead of the magic link. The account check through `/api/me` is the same for both. Ava approved merging on that basis; magic-link delivery is retested once Outlook is back.
 
 Done by Claude on 2026-11-12, without real Supabase: with `npm run dev` and the API running, http://localhost:5173 loads, `/api/health` through the proxy returns `{"status":"ok"}`, and `/api/me` through the proxy returns 401 "Sign in required.". Rendered in a 360px-wide frame, the sign-in screen and the setup message fit with no sideways scroll, and the text on dark is blush. Screenshots reviewed in session, not committed.
 
 ### Check 2 (AC3): sign-ups off
 
-Pending: screenshot of the Supabase "Allow new users to sign up" setting turned off. The API already refuses any account but `ALLOWED_USER_ID` (403, issue #17).
+Sign-ups turned off by Ava in the Supabase dashboard during setup (setup step 2). The API already refuses any account but `ALLOWED_USER_ID` (403, issue #17).
 
 ### Check 3 (AC6): no secrets committed
 
