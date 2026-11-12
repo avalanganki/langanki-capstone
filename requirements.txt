@@ -5,3 +5,6 @@ requests
 pytest
 anthropic
 pydantic
+fastapi
+uvicorn
+httpx

@@ -57,7 +57,27 @@ As Ava, I want each evening entry linked to the following night's Oura scores, a
 Decisions (2026-11-05): Oura's `day` is the date sleep ended, so the entry dated D links to the night dated D + 1. The link is worked out by date each time, never stored, so it stays right after a re-fetch, an edit, or a delete. Three honest states when there's no night: "No ring data for this night" (fetched, but Oura had nothing), "Not fetched from Oura yet", and "Connect Oura..." when not connected. Sample nights are never linked to real entries. App code only; nothing goes to Claude.
 
 - Link: a "Next night" line on each past entry, with linked, no-ring-data, not-fetched, and not-connected states, and a linked-night count for trends. Issue #14, see `docs/todo.md`.
-- Evening before: an "Evening before" tags column on the Tonight Oura table, never on sample nights. Issue #15, see `docs/todo.md`.
+- Evening before: an "Evening before" tags column beside each night, never on sample nights. Issue #15 closed 2026-11-05 as folded into US06: built in the new UI instead of Streamlit.
+
+## v0.6.0
+
+### US06 New UI: React frontend and FastAPI backend
+As Ava, I want Patterns to look and feel like the Patterns design on my phone (night-sky Tonight screen, score rings, tag chips, cream Insights cards), so the nightly check-in is pleasant enough to do every night. Source: `docs/decisions/frontend_decision.md` (Nov 5, 2026), `docs/design/themes.md`, `docs/design/wireframes/prototype.html`.
+
+Decisions (2026-11-05): Ava chose option B, a separate frontend. React + TypeScript (Vite) talks to a FastAPI backend that reuses the Python modules and holds every secret. Login is Supabase Auth, limited to Ava's account. Streamlit stays until the new UI matches it, then is removed. The prototype is corrected for the project rules: no causal follow-up, no screen-time question, the tag reuse rule, and a night count on every card. Fallback: if it isn't at parity by Nov 19, keep Streamlit for the demo. Decided 2026-11-05: Streamlit is no longer deployed live. It runs locally only until the new UI replaces it; the first live URL is the Render deploy.
+
+Planned pieces (each becomes an issue when moved to `docs/todo.md`):
+- Settings (issue #16, done, see `docs/xchangelog.md`): one `config.py` reads `.env` and environment variables for the Supabase, Oura, and Claude settings. It replaces the `st.secrets` fallbacks in `db.py`, `oura.py`, and `tagger.py`, so the modules no longer import Streamlit.
+- API skeleton (issue #17, done, see `docs/xchangelog.md`): FastAPI app, Supabase access-token check that allows only Ava's account, health route, and pytest with FastAPI's test client.
+- API routes: entries (create, list, get, update, delete) and Suggest tags are issue #19 (see `docs/todo.md`); then nights (display and refresh), entry links, and Oura connect, callback, and disconnect.
+- Frontend skeleton (issue #18, see `docs/todo.md`; magic-link sign-in chosen by Ava 2026-11-05, sign-ups off; also creates Ava's Supabase Auth user and sets `ALLOWED_USER_ID`): Vite + React + TypeScript, theme tokens from `themes.md` (night and cream palettes, Fraunces and Nunito Sans), Supabase sign-in, an API client, and Vitest.
+- Password sign-in (issue #20, see `docs/todo.md`; added by Ava 2026-11-12 because Outlook was down and the magic link couldn't arrive): email and password beside the magic link, sign-ups still off, plus `scripts/set_password.py` to set the password without email.
+- Tonight screen: night-sky header, score rings (sample nights labeled as sample), the three questions, Suggest tags with "New tags" and the privacy line, tag chips, and Save.
+- Past entries screen: list, open, edit, delete, "(suggested)" marks, the "Next night" line, and the "Evening before" tags beside each night (absorbs #15 if not built in Streamlit).
+- Oura settings: connect, refresh with "Last updated", and disconnect.
+- Deploy: one Render web service (confirmed by Ava 2026-11-05) serving the API and the built frontend; secrets in its environment; the new Oura redirect URIs registered.
+- Retire Streamlit: remove `app.py`, its AppTest tests, and the dependency once the new UI is at parity; update CLAUDE.md's run table.
+- Insights screen: part of trends (FR-6/7), not this story.
 
 ## Unscheduled
 
@@ -100,3 +120,6 @@ Found planning US05. "Refresh Oura data" pulls the last 14 days, so entries from
 
 ### Draft a request to Oura about AI use of score data
 Found 2026-11-05 (Ava asked whether Claude could see scores). Sec. 4(d) of the Oura API agreement forbids giving Oura API data to AI models, including typed-in copies within this app. If Claude wording of insights is ever wanted, email Oura's API team for written permission first. Also save the exact Sec. 4(d) text in `docs/research/` so the rule rests on its actual wording. No change to the rule until Oura answers in writing.
+
+### API logs must not record query strings
+Found building #17. uvicorn's access log writes each request's full path, including the query string. When the Oura callback moves to the API (`/callback/?code=...&state=...`), the authorization code would land in the log. Before that route ships, turn off uvicorn's access log or log only method, path without query, and status. CLAUDE.md: logs hold errors and timestamps only.

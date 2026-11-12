@@ -19,9 +19,18 @@ Completed items moved from `docs/todo.md`.
 - [x] #7 US03 Connect: sign in with Oura, store tokens, disconnect. Real sign-in checked by Ava and merged 2026-11-05. Evidence: `docs/features/oura.md`
 - [x] #8 US03 Fetch: pull daily sleep score, readiness, and average HRV into `nights`. Merged 2026-11-05. Evidence: `docs/features/oura.md`
 - [x] #9 US03 Show: Tonight tab uses stored Oura nights when connected, sample nights otherwise. Merged 2026-11-05. Evidence: `docs/features/oura.md`
+- [x] #10 US03 Verify: real Oura checks. Done 2026-11-12: average HRV is present with the `daily` scope, so no extra scope is needed; an expired sign-in renews itself; Disconnect empties `oura_connection`. The live Streamlit check was dropped (no live Streamlit, Ava 2026-11-05). Evidence: `docs/features/oura.md`. Closes out US03 Connect Oura.
 
 ## v0.4.0
 
 - [x] #11 US04 Suggest: Claude suggests tags from all answers, reusing known tags. Merged 2026-11-05. Evidence: `docs/features/tags.md`
 - [x] #12 US04 Source: remember suggested vs typed tags; suggest on edit. Merged 2026-11-05. Evidence: `docs/features/tags.md`
 - [x] #13 US04 Verify: real Claude tag accuracy and cost. 12 of 12 synthetic nights matched, about $0.004 a night, and it works on Streamlit Cloud. Merged 2026-11-05. Evidence: `docs/features/tags.md`. Closes out US04 Claude tags.
+
+## v0.6.0
+
+- [x] #16 US06 Settings: one config module; backend modules no longer import Streamlit. Merged 2026-11-05. Checked locally; the live Streamlit check was dropped (no live Streamlit, Ava decision). Evidence: `docs/features/backend.md`
+- [x] #17 US06 API skeleton: FastAPI with Supabase login check for Ava only. Merged 2026-11-05. Evidence: `docs/features/backend.md`
+- [x] #18 US06 Frontend skeleton: Vite React app, Patterns theme, Supabase sign-in gated by `/api/me`. Merged 2026-11-12. Ava signed in (by password via #20, Outlook down). Still to do: sign-ups-off screenshot and a magic-link retest. Evidence: `docs/features/web.md`
+- [x] #19 US06 Entry and tag routes: entries CRUD and Suggest tags in the API, with Streamlit's messages; no journal text in errors or logs. Merged 2026-11-12. Evidence: `docs/features/backend.md`
+- [x] #20 US06 Password sign-in: email and password beside the magic link, plus `scripts/set_password.py`; sign-ups still off. Merged 2026-11-12. Ava signed in and checked a wrong password (screenshots waived by Ava). Evidence: `docs/features/web.md`

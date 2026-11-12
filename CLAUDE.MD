@@ -8,7 +8,7 @@ Patterns: a nightly reflection app for Oura ring users. The app asks short, cont
 - Multi-user and other wearables are out of scope.
 
 ## Stack
-Python, Streamlit, Supabase (database and login), Oura API v2, Claude API. Deployed on Streamlit Community Cloud. This replaces local SQLite from PRD v1.1.
+Python FastAPI backend, React + TypeScript (Vite) frontend, Supabase (database and login), Oura API v2, Claude API. The API holds every secret; the browser never does. Decided Nov 5, 2026 (`docs/decisions/frontend_decision.md`), replacing Streamlit. Streamlit (`app.py`) runs locally only until the new UI matches it, then is removed; it is not deployed live. The live app will be on Render. Supabase replaced local SQLite from PRD v1.1.
 
 ## Conventions
 - Requirements live in /docs (concept brief, PRD, architecture). If a request contradicts them, say so. Don't guess.
@@ -45,9 +45,11 @@ Python, Streamlit, Supabase (database and login), Oura API v2, Claude API. Deplo
 | Folder | Install (once) | Start | Test | Port |
 |---|---|---|---|---|
 | `/` (app root) | `pip install -r requirements.txt` | `streamlit run app.py` | `pytest` | 8501 |
+| `/` (API) | `pip install -r requirements.txt` | `uvicorn api.main:app --reload --port 8000` | `pytest` | 8000 |
+| `web/` | `npm install` | `npm run dev` | `npm test` | 5173 |
 
 Gotchas on this machine:
 - The Oura redirect URI must match the registered one exactly, including the trailing slash (`http://localhost:8501/callback/`).
 - Oura API calls can be denied without an active Oura membership.
-- Streamlit Community Cloud apps sleep when idle, so the first load is slow.
+- Render free-tier services sleep when idle, so the first load after a while is slow.
 - Check `git status` for `.env` and any exports before every push.

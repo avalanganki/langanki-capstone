@@ -3,7 +3,7 @@
 **Author:** Ava Langanki
 **Course:** IST 300, Building Software with Agentic AI
 **Date:** September 27, 2026
-**Status:** Draft v1.2 (Nov 3, 2026: Oura data is never sent to Claude; see Section 10.2)
+**Status:** Draft v1.3 (Nov 5, 2026: React + FastAPI replaces Streamlit, see 10.1. Nov 3: Oura data is never sent to Claude, see 10.2)
 
 ## 1. Overview
 Patterns is a nightly reflection app. It uses Claude to ask contextual questions about the user's day, then builds a log that can be compared against Oura ring data (sleep, HRV, resting heart rate, readiness) to find which lifestyle factors affect those scores.
@@ -64,13 +64,13 @@ When I'm winding down for bed, I want to quickly capture what happened in the co
 - **Language:** Python
 - **Oura data:** Oura API v2 using OAuth2 (authorization code flow with refresh tokens).  
 - **App registration:** Self-serve at developer.ouraring.com (values in `docs/oura-app-registration.md`). Unapproved apps can connect up to 10 Oura users, so a single-user course project does not need Oura's review.
-- **Redirect URI:** A localhost callback (e.g., `http://localhost:8501/callback/`). Must match the registered URI exactly, including the trailing slash.
+- **Redirect URI:** The API's callback: `http://localhost:8000/callback/` locally and `https://<app>/callback/` live. Each must match a registered URI exactly, including the trailing slash. (Streamlit's `http://localhost:8501/callback/` stays registered until Streamlit is retired.)
 - **Scopes:** Request only `daily`. Add the smallest extra scope only if average HRV turns out to need it. Never `email` or `personal`.
 - **Requirement:** Active Oura membership, or API calls may be denied.
 - **AI:** Claude API for tag extraction and follow-up questions, from journal text only. The Oura API and MCP Agreement (effective June 8, 2026), Sec. 4(d), forbids providing Oura API data to any AI model.
-- **Storage:** SQLite, local only
-- **Interface:** Streamlit or a simple web app
-- **Build tools:** [TBD]
+- **Storage:** Supabase (Postgres), with row level security on and no public policies; only the API's secret key reads or writes.
+- **Interface:** React + TypeScript (Vite) single-page app, phone-first, served by a FastAPI (Python) backend that holds every secret. Login with Supabase Auth. See `docs/decisions/frontend_decision.md` (Nov 5, 2026; replaces Streamlit).
+- **Build tools:** pip and pytest for the API; npm, Vite, and Vitest for the frontend.
 
 ### 10.2 Data Privacy and Security
 Patterns handles two sensitive data types: biometric data from Oura and personal journal text. The approach follows common privacy principles: collect only what is needed, keep it secure, be transparent about where it goes, and let the user delete it.

@@ -1,0 +1,187 @@
+/* Patterns theme (docs/design/themes.md). Fixed palette: the dark screen is the nightly reflection.
+   Rules: text on dark is --blush (never white); the dark background is --night (never black);
+   amber is never text on cream. */
+:root {
+  --night: #1a1618;
+  --cocoa: #2a2326;
+  --mauve: #7a4a5a;
+  --rose: #e6b8c4;
+  --amber: #f0a35e;
+  --cream: #f5ede6;
+  --blush: #f3ecee;
+  --dim: #d9cdd2;
+  --placeholder: #9a8d92;
+  --cream-border: #e6d9d2;
+  --bar2: #c48b9f;
+  --field-border: #3a3134;
+
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --gutter: 16px;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--night);
+  color: var(--blush);
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 100%;
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- night sky header: edge to edge --- */
+.sky {
+  position: relative;
+  height: 120px;
+  padding-top: env(safe-area-inset-top);
+  box-sizing: content-box;
+}
+.sky svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.sky-text {
+  position: relative;
+  z-index: 1;
+  padding: 16px calc(var(--gutter) + env(safe-area-inset-right)) 0 calc(var(--gutter) + env(safe-area-inset-left));
+}
+.sky-text .date {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--dim);
+}
+.sky-text h1 {
+  font-family: var(--font-display);
+  font-variation-settings: 'SOFT' 100;
+  font-weight: 500;
+  font-size: 1.625rem;
+  line-height: 1.3;
+  color: var(--blush);
+  margin: 2px 0 0;
+}
+
+/* --- content column --- */
+.content {
+  padding: 20px calc(var(--gutter) + env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom))
+    calc(var(--gutter) + env(safe-area-inset-left));
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 100%;
+}
+
+.prompt {
+  font-family: var(--font-display);
+  font-variation-settings: 'SOFT' 100;
+  font-size: 1.1875rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.note {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--blush);
+}
+
+.error {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--blush);
+  border-left: 3px solid var(--amber);
+  padding-left: 10px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+}
+
+label {
+  font-size: 0.8125rem;
+  color: var(--rose);
+}
+
+.field {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  background: var(--cocoa);
+  border: 1px solid var(--field-border);
+  border-radius: 4px;
+  color: var(--blush);
+  font-size: 1rem;
+  font-family: var(--font-body);
+  padding: 0 14px;
+}
+.field::placeholder {
+  color: var(--placeholder);
+}
+.field:focus-visible,
+.button:focus-visible {
+  outline: 2px solid var(--rose);
+  outline-offset: 2px;
+}
+
+.button {
+  min-height: 44px;
+  padding: 0 18px;
+  background: var(--mauve);
+  color: var(--blush);
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 0.9375rem;
+  font-family: var(--font-body);
+  cursor: pointer;
+  align-self: flex-start;
+}
+.button.quiet {
+  background: transparent;
+  border: 1px solid var(--mauve);
+}
+.button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .fade-in {
+    animation: fade 250ms ease-out;
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

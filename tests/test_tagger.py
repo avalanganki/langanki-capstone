@@ -163,11 +163,11 @@ def test_unparsed_output_raises_plain_message():
 
 
 def test_is_configured_reads_environment(monkeypatch):
-    monkeypatch.setattr(tagger, "load_dotenv", lambda *a, **k: None)
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
     assert tagger.is_configured()
     monkeypatch.setenv("ANTHROPIC_API_KEY", " ")
-    monkeypatch.setattr(tagger, "get_api_key", lambda: "")
+    assert not tagger.is_configured()
+    monkeypatch.delenv("ANTHROPIC_API_KEY")
     assert not tagger.is_configured()
 
 
