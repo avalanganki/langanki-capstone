@@ -89,3 +89,45 @@ The made-up token was checked by the real Supabase project and rejected. The ser
 Waits for the frontend skeleton issue, which adds a sign-in screen. Until then, AC4 is covered by tests.
 
 Done by Ava on 2026-11-05: http://localhost:8000/api/health shows `{"status":"ok"}`. `ALLOWED_USER_ID` is not in `.env` yet (checked for presence only); setting it, and creating a Supabase Auth user if needed, moves to the frontend skeleton issue.
+
+## Entry and tag routes (issue #19)
+
+Built on 2026-11-12, Python 3.9.6, FastAPI 0.128.8. Every route below needs sign-in (`require_user`, set once on each router).
+
+What it does:
+- `GET /api/questions` returns `{"questions": [...]}`, the three fixed questions from `entries.QUESTIONS`.
+- `GET /api/entries` returns `{"entries": [...]}`, newest first. Each entry has `id`, `entry_date`, `answers`, `tags`, `suggested_tags`, and `tag_sources` as `[{"tag", "source"}]`, where source is `suggested` or `typed`.
+- `GET /api/entries/{id}` returns one entry, or 404 "Entry not found."
+- `POST /api/entries` saves a new entry and returns it with 201. It refuses an unknown question (400 "Unknown question."), all-blank answers (400 "Answer at least one question to save."), and a date already used (409 "You already have an entry for this date. Edit it in Past entries."). Tags and suggested tags are cleaned like the Streamlit tags box: lowercase, trimmed, no blanks or repeats.
+- `PUT /api/entries/{id}` changes answers and tags. The questions must be the stored ones, in the same order (otherwise 400 "Unknown question."). `suggested_tags: null`, or leaving it out, keeps the stored suggestion. The date never changes.
+- `DELETE /api/entries/{id}` returns 204, or 404 if the entry is missing.
+- `POST /api/tags/suggest` takes `{"pairs": [{"question", "answer"}]}` and returns `{"tags": [{"tag", "is_new"}]}` from `tagger.suggest_tags`, with the known tags from saved entries. It saves nothing. Without a Claude key it's 503 "Tag suggestions are off (no Claude API key)."; a Claude failure is 503 "Couldn't suggest tags right now. Type them instead."
+
+Decided while building:
+- `require_user` moved to `api/auth.py` so the routers can use it without a circular import. `api.main` still re-exports it.
+- An unknown question is refused before anything else on Suggest tags, so it never reaches Claude, even if the key is set.
+- FastAPI's default 422 response echoes the request body back, which could include journal text. The API now answers any malformed request with 422 "Invalid request." and nothing else.
+- Database errors can carry row values (Postgres "Failing row contains ..."). `api/storage.py` turns any unexpected database error into 503 "Couldn't reach the database. Try again." and logs only the error type.
+- A blank `answers` list counts as all blank (400), the same as three empty answers.
+- `FakeClient` moved from `tests/test_app.py` to `tests/fakes.py`, so the Streamlit and API tests share it.
+
+### Check 1 (AC1 to AC6): tests
+
+`tests/test_api_entries.py` (Supabase faked with `FakeClient`, `require_user` overridden with `app.dependency_overrides`, `tagger.suggest_tags` or Claude's client mocked):
+- Sign-in (AC3): `test_every_route_needs_sign_in`, for all seven routes; nothing is saved and nothing goes to Claude.
+- Questions: `test_questions`
+- Create (AC1): `test_create_returns_201_with_saved_entry`, `test_create_same_date_is_409`, `test_create_blank_is_400` (three cases), `test_create_unknown_question_is_400` (AC4), `test_create_normalizes_tags`, `test_create_bad_date_is_422_without_answer_text` (AC5)
+- List and get (AC1): `test_list_newest_first_with_tag_sources`, `test_list_empty`, `test_get_found`, `test_get_missing_is_404`
+- Update (AC1): `test_update_changes_answers_and_tags`, `test_update_null_keeps_suggested_tags`, `test_update_changed_question_is_400` (reordered, missing, and replaced question), `test_update_blank_is_400`, `test_update_missing_is_404`
+- Delete (AC1): `test_delete_then_404`
+- Database down (AC5): `test_database_error_is_503_without_details`
+- Suggest (AC2): `test_suggest_returns_tags_with_new_flag`, `test_suggest_off_when_not_configured`, `test_suggest_tagger_error_is_503_without_answer_text` (AC5), `test_suggest_unknown_question_sends_nothing` (AC4), `test_suggest_real_tagger_with_fake_claude` (only the question and answer are sent), `test_suggest_does_not_log_answer_text` (AC5)
+- Logs (AC5): `test_create_does_not_log_answer_text`, plus `caplog` checks in the database and Suggest tests.
+
+`pytest -q`: 185 passed (36 new), with no real Supabase, Oura, or Claude (AC6).
+
+### Check 2: route list
+
+Done by Claude on 2026-11-12: `uvicorn api.main:app --port 8000` started without error. The OpenAPI route list shows `GET /api/health`, `GET /api/me`, `GET /api/questions`, `GET /api/entries`, `POST /api/entries`, `GET`, `PUT`, and `DELETE /api/entries/{entry_id}`, and `POST /api/tags/suggest`. Without sign-in, all seven new routes return 401 "Sign in required." The server log shows only method, path, and status.
+
+Done by Ava on 2026-11-12: opened the API docs page (served from `dev/19-entry-routes` on port 8001, because 8000 was running the #20 branch) and screenshotted the route list: all nine routes and their request schemas (`NewEntry`, `EntryChanges`, `Pair`, `SuggestRequest`), with no data shown. Screenshot reviewed in session, not committed.

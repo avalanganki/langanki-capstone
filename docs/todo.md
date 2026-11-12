@@ -12,5 +12,4 @@ Items moved from `docs/backlog.md` that we are working on now.
 
 ## v0.6.0 US06 New UI
 
-- [ ] #19 Entry and tag routes: entries CRUD and Suggest tags in the API
 - [ ] #20 Password sign-in: email and password beside the magic link
