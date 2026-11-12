@@ -130,4 +130,4 @@ Decided while building:
 
 Done by Claude on 2026-11-12: `uvicorn api.main:app --port 8000` started without error. The OpenAPI route list shows `GET /api/health`, `GET /api/me`, `GET /api/questions`, `GET /api/entries`, `POST /api/entries`, `GET`, `PUT`, and `DELETE /api/entries/{entry_id}`, and `POST /api/tags/suggest`. Without sign-in, all seven new routes return 401 "Sign in required." The server log shows only method, path, and status.
 
-Pending: Ava opens http://localhost:8000/docs and screenshots the route list, with no data shown.
+Done by Ava on 2026-11-12: opened the API docs page (served from `dev/19-entry-routes` on port 8001, because 8000 was running the #20 branch) and screenshotted the route list: all nine routes and their request schemas (`NewEntry`, `EntryChanges`, `Pair`, `SuggestRequest`), with no data shown. Screenshot reviewed in session, not committed.
