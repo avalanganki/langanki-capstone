@@ -45,6 +45,8 @@ Python FastAPI backend, React + TypeScript (Vite) frontend, Supabase (database a
 | Folder | Install (once) | Start | Test | Port |
 |---|---|---|---|---|
 | `/` (app root) | `pip install -r requirements.txt` | `streamlit run app.py` | `pytest` | 8501 |
+| `/` (API) | `pip install -r requirements.txt` | `uvicorn api.main:app --reload --port 8000` | `pytest` | 8000 |
+| `web/` | `npm install` | `npm run dev` | `npm test` | 5173 |
 
 Gotchas on this machine:
 - The Oura redirect URI must match the registered one exactly, including the trailing slash (`http://localhost:8501/callback/`).
