@@ -126,7 +126,7 @@ Decided while building:
 
 ### Check 1 (AC1 to AC6): one real check-in
 
-Pending: Ava does one check-in on http://localhost:5173 in a phone-sized window, then opens that entry in Streamlit's Past entries. Describe in words only.
+Done by Ava (reported 2026-11-23): one real check-in on http://localhost:5173 in a phone-sized window. Everything worked: the scores card showed her own Oura nights (labeled "From your Oura ring"), questions one at a time with Back and skip, tags with Suggest tags, Save, and the entry opened correctly in Streamlit's Past entries. The nights shown were old because the new UI has no Oura refresh yet; Ava asked for a side hamburger menu to resync, added to the backlog under Oura settings (2026-11-17).
 
 Done by Claude on 2026-11-12, with synthetic data on a temporary preview page (deleted afterwards): at 360px wide, the scores card, the answered questions, the wrapped tag pills, the add-tag row, the date field, and Save all fit with no sideways scroll. "No data" shows for a missing HRV.
 
