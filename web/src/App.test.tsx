@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { TOKEN, auth, fakeSession, resetSupabase } from './test/supabaseMock'
+import { fakeApi } from './test/fakeApi'
 
 vi.mock('./supabase', () => import('./test/supabaseMock'))
 
@@ -27,11 +28,11 @@ describe('App', () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it('shows the Tonight header and "Signed in." when /api/me is ok', async () => {
+  it('shows the Tonight screen when /api/me is ok', async () => {
     resetSupabase(fakeSession)
-    fetchMock.mockResolvedValue(jsonResponse(200, { signed_in: true }))
+    fetchMock = fakeApi()
     render(<App />)
-    expect(await screen.findByText('Signed in.')).toBeInTheDocument()
+    expect(await screen.findByText('How was your energy this afternoon?')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Tonight' })).toBeInTheDocument()
     expect(fetchMock.mock.calls[0][0]).toBe('/api/me')
     expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe(`Bearer ${TOKEN}`)
@@ -44,7 +45,7 @@ describe('App', () => {
     expect(await screen.findByText("This account can't use Patterns.")).toBeInTheDocument()
     expect(auth.signOut).toHaveBeenCalled()
     expect(screen.getByRole('button', { name: 'Send sign-in link' })).toBeInTheDocument()
-    expect(screen.queryByText('Signed in.')).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Tonight' })).not.toBeInTheDocument()
   })
 
   it("shows the API's message on any other error", async () => {
@@ -53,14 +54,15 @@ describe('App', () => {
     render(<App />)
     expect(await screen.findByText("Couldn't check sign-in. Try again.")).toBeInTheDocument()
     expect(auth.signOut).not.toHaveBeenCalled()
-    expect(screen.queryByText('Signed in.')).not.toBeInTheDocument()
+    expect(screen.queryByText('How was your energy this afternoon?')).not.toBeInTheDocument()
+    expect(fetchMock).toHaveBeenCalledTimes(1) // no Tonight data is loaded until the account check passes
   })
 
   it('Sign out returns to the sign-in screen', async () => {
     resetSupabase(fakeSession)
-    fetchMock.mockResolvedValue(jsonResponse(200, { signed_in: true }))
+    fetchMock = fakeApi()
     render(<App />)
-    await screen.findByText('Signed in.')
+    await screen.findByText('How was your energy this afternoon?')
     await userEvent.click(screen.getByRole('button', { name: 'Sign out' }))
     expect(auth.signOut).toHaveBeenCalled()
     expect(await screen.findByRole('button', { name: 'Send sign-in link' })).toBeInTheDocument()
@@ -78,19 +80,19 @@ describe('App', () => {
     expect(await screen.findByText("This account can't use Patterns.")).toBeInTheDocument()
     expect(fetchMock.mock.calls[0][0]).toBe('/api/me')
     expect(auth.signOut).toHaveBeenCalled()
-    expect(screen.queryByText('Signed in.')).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Tonight' })).not.toBeInTheDocument()
   })
 
   it('a password sign-in for my account shows the Tonight header', async () => {
     resetSupabase(null)
-    fetchMock.mockResolvedValue(jsonResponse(200, { signed_in: true }))
+    fakeApi()
     render(<App />)
     await userEvent.click(await screen.findByRole('button', { name: 'Use a password instead' }))
     await userEvent.type(screen.getByLabelText('Email'), 'someone@example.invalid')
     await userEvent.type(screen.getByLabelText('Password'), 'synthetic-pass-123')
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }))
 
-    expect(await screen.findByText('Signed in.')).toBeInTheDocument()
+    expect(await screen.findByText('How was your energy this afternoon?')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Tonight' })).toBeInTheDocument()
   })
 })

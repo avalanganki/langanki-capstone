@@ -1,8 +1,9 @@
 """Claude tag suggestions (issue #11). The Anthropic client is always mocked; Claude is never called."""
 
+import importlib.util
 import json
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import anthropic
 import httpx
@@ -165,6 +166,9 @@ def test_unparsed_output_raises_plain_message():
 def test_is_configured_reads_environment(monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
     assert tagger.is_configured()
+    with patch("anthropic.Anthropic") as sdk:
+        tagger.get_client()
+    assert sdk.call_args.kwargs["api_key"] == "test-key"
     monkeypatch.setenv("ANTHROPIC_API_KEY", " ")
     assert not tagger.is_configured()
     monkeypatch.delenv("ANTHROPIC_API_KEY")
@@ -191,3 +195,34 @@ def test_tag_cases_fixture_is_valid():
         assert set(case["expect"]) <= set(tagger.SEED_TAGS), case["name"]
         used |= set(case["expect"])
     assert used == set(tagger.SEED_TAGS)  # every seed tag is checked at least once
+
+
+def load_check_tags():
+    path = Path(__file__).resolve().parent.parent / "scripts" / "check_tags.py"
+    spec = importlib.util.spec_from_file_location("check_tags", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_check_tags_script_scores_cases(capsys):
+    # The real-Claude run is manual; this checks the script with a mocked Claude that
+    # answers each non-blank case with its expected tags (one made-up tag for "new").
+    cases = json.loads((FIXTURES / "tag_cases.json").read_text())["cases"]
+    assert {"variants merge", "needs question"} <= {c["name"] for c in cases}
+    replies = iter(c["expect"] + (["cold plunge"] if c.get("new") else [])
+                   for c in cases if any(a.strip() for a in c["answers"]))
+
+    def parse(**kwargs):
+        response = MagicMock(stop_reason="end_turn")
+        response.parsed_output = tagger.TagList(tags=next(replies))
+        response.usage.input_tokens = response.usage.output_tokens = 0
+        return response
+
+    client = MagicMock()
+    client.beta.messages.parse.side_effect = parse
+    check_tags = load_check_tags()
+    with patch("tagger.is_configured", return_value=True), patch("tagger.get_client", return_value=client):
+        check_tags.main()
+    assert "12 of 12 match. 11 Claude calls" in capsys.readouterr().out  # all-blank night: no call
+    assert not check_tags.matches({"expect": ["low energy"]}, [("high energy", False)])

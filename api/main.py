@@ -1,4 +1,4 @@
-"""Patterns API (issues #17, #19). Holds every secret; the browser only ever sends its Supabase access token.
+"""Patterns API (issues #17, #19, #21). Holds every secret; the browser only ever sends its Supabase access token.
 
 Never log tokens, user IDs, emails, journal text, or health values.
 Oura data never goes to Claude or any AI model (Oura API agreement Sec. 4(d)).
@@ -9,7 +9,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from api import entries_routes, tags_routes
+from api import entries_routes, nights_routes, tags_routes
 from api.auth import CHECK_FAILED, NOT_ALLOWED, SIGN_IN_REQUIRED, require_user  # noqa: F401
 
 DEV_ORIGINS = ["http://localhost:5173"]  # Vite dev server; the deploy issue adds the live origin
@@ -44,3 +44,4 @@ def me(user_id: str = Depends(require_user)):
 
 app.include_router(entries_routes.router)
 app.include_router(tags_routes.router)
+app.include_router(nights_routes.router)

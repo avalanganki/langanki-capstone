@@ -185,3 +185,189 @@ label {
     opacity: 1;
   }
 }
+
+/* --- Tonight (issue #21) --- */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+}
+.row .field {
+  flex: 1;
+}
+
+.small {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--placeholder);
+}
+
+.sign-out {
+  margin-top: 12px;
+}
+
+/* Score rings: Readiness and Sleep are 0 to 100; HRV has no natural maximum, so no ring. */
+.rings-card {
+  background: var(--cocoa);
+  border-radius: 4px;
+  padding: 14px 10px;
+  display: flex;
+  justify-content: space-between;
+}
+.ring {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+.ring-number-wrap {
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+.ring svg {
+  width: 64px;
+  height: 64px;
+}
+.ring .track {
+  fill: none;
+  stroke: var(--mauve);
+  stroke-opacity: 0.35;
+  stroke-width: 6;
+}
+.ring .fill {
+  fill: none;
+  stroke: var(--rose);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+.ring-number {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  font-size: 1.25rem;
+  color: var(--blush);
+}
+.ring-number.plain {
+  font-size: 1.4rem;
+}
+.ring-number.missing {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--dim);
+  text-align: center;
+}
+.ring-label {
+  font-size: 0.75rem;
+  color: var(--blush);
+}
+.rings-note {
+  font-size: 0.75rem;
+  color: var(--dim);
+  margin: 8px 0 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ring .fill {
+    animation: ring-fill 700ms ease-out;
+  }
+}
+@keyframes ring-fill {
+  from {
+    stroke-dashoffset: var(--ring-c);
+  }
+}
+
+/* Questions in serif (Claude's voice), answers in a Cocoa Card (Ava's voice). */
+.pair {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.q {
+  margin: 0;
+  font-family: var(--font-display);
+  font-variation-settings: 'SOFT' 100;
+  font-size: 1.1875rem;
+  line-height: 1.55;
+  color: var(--blush);
+  max-width: 38ch;
+}
+.a {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--blush);
+  background: var(--cocoa);
+  border-radius: 4px;
+  padding: 12px 14px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.skipped {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--placeholder);
+}
+.field.area {
+  height: auto;
+  min-height: 96px;
+  padding: 12px 14px;
+  line-height: 1.6;
+  resize: vertical;
+}
+.field[type='date'] {
+  color-scheme: dark;
+}
+
+/* Tags are the one soft shape: pills. */
+.tags-step {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tags-label {
+  font-size: 0.8125rem;
+  color: var(--rose);
+  margin: 0;
+}
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.tag {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--blush);
+  background: var(--mauve);
+  border: none;
+  border-radius: 999px;
+  padding: 0 14px;
+  min-height: 44px;
+  cursor: pointer;
+}
+.tag:focus-visible {
+  outline: 2px solid var(--rose);
+  outline-offset: 2px;
+}

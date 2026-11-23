@@ -497,6 +497,15 @@ def tags_on(claude_off):
     claude_off.return_value = True
 
 
+def test_privacy_caption_sits_under_the_form(fake, claude_off):
+    tags_on(claude_off)
+    at = run_app()
+    children = list(at.tabs[0].children.values())
+    form_at = next(i for i, n in enumerate(children) if getattr(n, "type", None) == "form")
+    caption_at = next(i for i, n in enumerate(children) if str(getattr(n, "value", "")).startswith(PRIVACY))
+    assert caption_at > form_at  # outside the form, below it
+
+
 def test_suggest_fills_tags_and_does_not_save(fake, claude_off):
     tags_on(claude_off)
     with patch("tagger.suggest_tags", return_value=[("low energy", False), ("late caffeine", False)]) as suggest:
